@@ -169,8 +169,7 @@ void setup() {
 
 void loop() {  
   digitalWrite(13, armed);
-  //INPUT API
-  /*
+    
   #ifdef API
     while (serial_stream.available()) 
     {
@@ -181,7 +180,6 @@ void loop() {
   #endif  
 
 
-  */
   if (newReceiver()) {
     //testreciever(); //print receiver to serial. useful for setting trims.
 
