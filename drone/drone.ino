@@ -14,12 +14,12 @@
 //////////////////////////////////////
 
                               
-double accelgain = 0.05;      // higher corrects drift faster. too high with above drag value too low will 
+double accelgain = 0.01;      // higher corrects drift faster. too high with above drag value too low will 
                               // overpower gyro and update waaay too slow
                               // higher values introduce more vibrational noise. 
                               // lower makes it less locked to world orientation
 
-double compassgain = 0.05;
+double compassgain = 0.01;
 
 //////////////////////////////////////////
 
@@ -34,7 +34,7 @@ int barostate;     // is altimeter working
 
 // These get updated as fast as possible
 // SENSORS
-#define SAMPLELENGTH 3     //15 Samples at 760hz works out to 0.02sec maximum lag
+#define SAMPLELENGTH 5  
 
 int recievercounter = 0;
 int gyrocounter = 0;
