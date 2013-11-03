@@ -1,0 +1,586 @@
+<html>
+	<head>
+		<title>Locator Viewer</title>
+		<style>
+			* { margin: 0; padding: 0; color: #fff; font-family: sans-serif;}
+			body { background: #000;}
+			canvas { width: 100%; height: 100% }
+            #info {
+                position: absolute;
+                top: 10px;
+                width: 100%;
+                text-align: center;
+                z-index: 100;
+                display:block;
+            }
+            #info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+		</style>
+	</head>
+	<body>
+		<script src="./three.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>        
+        <div id="info">
+            drone HUD
+        </div>
+<script>
+    var scene = new THREE.Scene()
+	scene.fog = new THREE.FogExp2( 0x000000, 0.04 );
+
+    var socket = io.connect();
+    
+
+
+  
+    var UI = {
+        x : 0,
+        y : 0,
+        leftClick : 0,
+        forward : 0,
+        takeoff : 0,
+        landing : 0,
+        flying : 0,
+        cam : 1
+    }    
+
+    var flight = {
+    	takeoffaltitude : 0,
+    	altitudeLastReading : 0,
+    	altitude : 0,
+    	altitudepredict: 0,
+    	dataset : false,
+    	ux : 0,
+    	uy: 0,
+    	uz: 1,
+        motors: [0,0,0,0]
+    }
+
+    
+    //this will be the world relative object.
+    var drone = new THREE.Object3D();
+    scene.add(drone)
+    drone.useQuaternion = true;
+    var cameraPivot = new THREE.Object3D();
+    drone.add(cameraPivot)
+    
+
+    //DRONE CAMERA
+    var camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.001, 10000 )
+
+    camera.position.z = -0.2; //slightly forward of actual center.
+    camera.position.y = 0.07 // slightly up from actual center
+    camera.rotation.y = Math.PI;
+    cameraPivot.add(camera)
+    //OUTSIDE CAM
+    var outsideCamera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.001, 10000 )
+    outsideCamera.position.x = -0.05*2; //slightly forward of actual center.
+    outsideCamera.position.y = -0.4*2; //slightly forward of actual center.
+    outsideCamera.position.z = 0.1*2; //slightly forward of actual center.
+    outsideCamera.rotation.x = Math.PI/2;
+    outsideCamera.rotation.y = 0.1;
+    scene.add(outsideCamera)    
+
+    /*
+            #   #  #   #  ####                                                        
+            #   #  #   #  #   #                        
+            #####  #   #  #   #                                                        
+            #   #  #   #  #  #                   
+            #   #   ###   ###                                         
+    */
+
+        var hudMaterial = new THREE.MeshBasicMaterial( { color: rgb(255,255,255), wireframe: 0 } );
+        hudGeometry = new THREE.CubeGeometry( 0.005, 0.05, 0);
+        hudMesh = new THREE.Mesh( hudGeometry, hudMaterial );    
+        hudMesh.position.set(0,0,-1)
+        camera.add(hudMesh)    
+        hudGeometry2 = new THREE.CubeGeometry( 0.05,0.005, 0);
+        hudMesh2 = new THREE.Mesh( hudGeometry2, hudMaterial );    
+        hudMesh2.position.set(0,0,-1)
+        camera.add(hudMesh2)    
+        //motor hud
+        var hudMotorMaterial = new THREE.MeshBasicMaterial( { color: rgb(155,0,0), wireframe: 1 } );
+
+        var hudMotorGeo = new THREE.CubeGeometry( 0.1,0.05, 0.1);        
+        
+
+        var hudMotor0Mesh = new THREE.Mesh( hudMotorGeo, hudMotorMaterial );  
+            hudMotor0Mesh.position.set(0.2,0.01,0.2)
+            drone.add(hudMotor0Mesh)            
+        
+            var hudMotor1Mesh = new THREE.Mesh( hudMotorGeo, hudMotorMaterial );    
+            hudMotor1Mesh.position.set(0.2,0.01,-0.2)
+            drone.add(hudMotor1Mesh)     
+        
+            var hudMotor2Mesh = new THREE.Mesh( hudMotorGeo, hudMotorMaterial );    
+            hudMotor2Mesh.position.set(-0.2,0.01,0.2)
+            drone.add(hudMotor2Mesh)  
+        
+            var hudMotor3Mesh = new THREE.Mesh( hudMotorGeo, hudMotorMaterial );    
+            hudMotor3Mesh.position.set(-0.2,0.01,-0.2)
+            drone.add(hudMotor3Mesh)    
+        //DRONE box
+        var hudDroneMaterial = new THREE.MeshBasicMaterial( { color: rgb(155,155,155), wireframe: 1 } );
+        var hudDrone0Geo = new THREE.CubeGeometry( .65,0.02,0.02);
+        var hudDrone0Mesh = new THREE.Mesh( hudDrone0Geo, hudDroneMaterial );    
+        hudDrone0Mesh.rotation.y = Math.PI/4
+        hudDrone0Mesh.position.set(0,0,0)
+        drone.add(hudDrone0Mesh)               
+        var hudDrone1Mesh = new THREE.Mesh( hudDrone0Geo, hudDroneMaterial );    
+        hudDrone1Mesh.rotation.y = Math.PI/4 + Math.PI/2
+        hudDrone1Mesh.position.set(0,0,0)
+        drone.add(hudDrone1Mesh)               
+    //end HUD
+
+    //data
+
+var copter = {}
+copter.forward = new THREE.Vector3(0,1,0);
+copter.up = new THREE.Vector3(0,0,1);
+copter.right = new THREE.Vector3();
+copter.right.copy(copter.forward).cross(copter.up)
+copter.right.normalize();
+copter.forwardDisplay = createVector(scene,copter.forward)     
+copter.upDisplay = createVector(scene,copter.up) 
+copter.rightDisplay = createVector(scene,copter.right)     
+var axis = {}
+axis.forward = new THREE.Vector3(0,1,0);
+axis.up = new THREE.Vector3(0,0,1);
+axis.right = new THREE.Vector3();
+axis.right.copy(axis.forward).cross(axis.up)
+axis.right.normalize();
+
+axis.forwardDisplay = createVector(scene,axis.forward,[0,0.5,0])     
+axis.upDisplay = createVector(scene,axis.up,[0,0,0.5]) 
+axis.rightDisplay = createVector(scene,axis.right,[0.5,0,0]) 
+
+var alterrorlimit = 1.0;
+var timeLast = Date.now();
+
+//replacement PID
+var m0errlast = 0.0;
+var m0vellast = 0.0;
+    /*
+          ####   ###    ####  #  #  #####  #####  
+         #      #   #  #      # #   #        #     
+          ###   #   #  #      ##    ###      #    
+             #  #   #  #      # #   #        #    
+         ####    ###    ####  #  #  #####    #   
+    */
+    socket.on('locator', function (data) {
+        //time
+
+        var timenow = data.time
+        var interval = (timenow - timeLast)/1000000;
+        timeLast = timenow;
+        //end time
+
+   
+
+        // PID new
+  
+            var m0vel = (data.m0err - m0errlast) / interval ;
+            var m0acc = (m0vel - m0vellast) / interval ;
+            if (m0acc > 1) {
+                console.log("m0err "+data.m0err + " velocity " + m0vel.toFixed(2) + " acc " + m0acc.toFixed(2))    
+            }
+            
+            m0errlast = data.m0err
+            m0vellast = m0vel;
+
+
+        //
+    	if (data.status) { return; }
+        /*
+                     [0]   F  [3]                                                   
+                        \    /                                                  
+                         \##/                                                   
+                   L     R##\     R                                             
+                        R    \                                                   
+                     [1]   B  [2]                               
+        */
+        if (data.motors) {
+            if (data.motors.length == 4) {
+                flight.motors = data.motors   
+                        
+            }            
+        }
+
+    	data.al = parseFloat(data.al);
+    	//TAKEOFF
+    	//set takeoff location altitude.
+    	if (flight.dataset == false) {
+    		flight.takeoffaltitude = data.al;	
+    		flight.altitude = data.al;	
+    		flight.altitudepredict = data.al;    
+    		flight.dataset = true;
+
+    	}
+    	flight.altitude = data.al;	
+
+        
+
+        copter.forwardDisplay.geometry.vertices[1].x = data.fx
+        copter.forwardDisplay.geometry.vertices[1].y = data.fy
+        copter.forwardDisplay.geometry.vertices[1].z = data.fz
+        copter.forwardDisplay.geometry.verticesNeedUpdate = true;
+
+
+        copter.upDisplay.geometry.vertices[1].x = data.ux
+        copter.upDisplay.geometry.vertices[1].y = data.uy
+        copter.upDisplay.geometry.vertices[1].z = data.uz
+        copter.upDisplay.geometry.verticesNeedUpdate = true;    
+
+
+        copter.rightDisplay.geometry.vertices[1].x = data.rx
+        copter.rightDisplay.geometry.vertices[1].y = data.ry
+        copter.rightDisplay.geometry.vertices[1].z = data.rz
+        copter.rightDisplay.geometry.verticesNeedUpdate = true;    
+
+        axis.forwardDisplay.geometry.vertices[1].x = data.afx
+        axis.forwardDisplay.geometry.vertices[1].y = data.afy
+        axis.forwardDisplay.geometry.vertices[1].z = data.afz
+        axis.forwardDisplay.geometry.verticesNeedUpdate = true;
+
+
+        axis.upDisplay.geometry.vertices[1].x = data.aux
+        axis.upDisplay.geometry.vertices[1].y = data.auy
+        axis.upDisplay.geometry.vertices[1].z = data.auz
+        axis.upDisplay.geometry.verticesNeedUpdate = true;    
+
+
+        axis.rightDisplay.geometry.vertices[1].x = data.arx
+        axis.rightDisplay.geometry.vertices[1].y = data.ary
+        axis.rightDisplay.geometry.vertices[1].z = data.arz
+        axis.rightDisplay.geometry.verticesNeedUpdate = true;           
+
+
+
+
+			var m1 = new THREE.Matrix4();
+	        copter.forward = new THREE.Vector3(data.fx,data.fy,data.fz)
+	        copter.up = new THREE.Vector3(data.ux,data.uy,data.uz)
+			m1.lookAt( copter.forward, new THREE.Vector3(0,0,0), copter.up );
+			drone.quaternion.setFromRotationMatrix( m1 );
+
+    });
+
+   
+
+    ////////////////////////////////////////////////////////////
+    // GRID, CAMERA AND RENDER
+    createAxisGrid(scene,-0.001, 0x33cc33, 0x334433, true)
+    
+    for (var h = 1; h < 10; h++) {
+    	if (h%3 == 0) {
+    		createAxisGrid(scene,h*10, 0xffffff )
+    	} else {
+    		createAxisGrid(scene,h*10, 0x33cccc )	
+    	}
+    	
+    }
+    var rendersettings = {}
+    rendersettings.antialias = true
+    var renderer = new THREE.WebGLRenderer(rendersettings)
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );           
+    document.addEventListener( 'mousedown', mouseDown, false );
+    document.addEventListener( 'mouseup', mouseUp, false );
+    document.addEventListener( 'mousemove', mouseMove, false );
+    document.addEventListener( 'keydown', keyDown, false );
+    document.addEventListener( 'keyup', keyUp, false );    
+
+
+
+    /*
+            #  #   #  ####   #   #  #####                                 
+            #  ##  #  #   #  #   #    #                                                                             
+            #  # # #  ####   #   #    #                                                              
+            #  #  ##  #      #   #    #                                                                
+            #  #   #  #       ###     #                                                       
+    */
+
+    var INPUT = {
+        x : 0,
+        y : 0,
+        leftClick : 0,
+        forward : 0,
+        takeoff : 0,
+        landing : 0,
+        flying : 0,
+        cam : 1
+    }    
+
+	function keyDown(key) { 
+       if (key.which == 80) { //P for perspective.. changes the camera
+            if (INPUT.cam == 0) {
+                console.log("camera toggle")
+                INPUT.cam = 1; 
+                return;
+            }   
+            if (INPUT.cam == 1) {
+                console.log("camera toggle")
+                INPUT.cam = 0; 
+                return;
+            }                   
+        }       
+	 	if (key.which == 84) { //T for takeoff
+    		if (INPUT.takeoff == 1) {
+    			socket.emit('key', {data: 0.0});   	
+    			INPUT.takeoff = 0;	
+    		}    		
+    	}    
+
+    	if (key.which == 87) {  //W for forward  (WASD)		  
+    		if (INPUT.forward == 1) {
+    			socket.emit('key', {data: 0.0});   	
+    			INPUT.forward = 0;	
+    		}
+    	}    	
+    }
+
+
+    function keyUp(key) {       
+     /* leftClick : 0,
+        forward : 0,
+        takeoff : 0,
+        landing : 0,
+        flying : 0 */
+        console.log(key.which)
+
+        if (key.which == 84) { //T for takeoff
+            if (UI.takeoff == 0) {
+                console.log("takeoff procedure started.")
+                console.log("setting takeoffaltitude to current altitude")
+                flight.takeoffaltitude = flight.altitude; //this resets the ground level
+                socket.emit('key', {data: 0.2});    
+                UI.takeoff = 1; 
+            }
+            
+        }           
+        if (key.which == 87) {  //W for forward  (WASD)
+            if (UI.forward == 0) {
+                socket.emit('key', {data: 0.1});    
+                UI.forward = 1; 
+            }
+            
+        }       
+    }
+
+    function mouseMove(mouse) {
+        //console.log(mouse)]
+        /*
+        if (UI.leftClick == 1) {
+            cameraPivot.rotation.y -= (mouse.clientX - UI.x)/300;
+            cameraPivot.rotation.x -= (mouse.clientY - UI.y)/300;
+        }
+        UI.x = mouse.clientX;
+        UI.y = mouse.clientY;
+        */
+    }
+
+    function mouseDown(mouse) {
+        if (mouse.button == 0) {
+            UI.leftClick = 1;
+        }
+    }
+
+    function mouseUp(mouse) {
+        if (mouse.button == 0) {
+            UI.leftClick = 0;   
+        }
+    }
+
+
+
+    /*
+            #####  #   #  #  #     #  #####  #####  #####                                      
+            #   #  ##  #  #  ##   ##  #   #    #    #                                            
+            #####  # # #  #  # # # #  #####    #    ###                                             
+            #   #  #  ##  #  #  #  #  #   #    #    #                                             
+            #   #  #   #  #  #     #  #   #    #    #####                                          
+    */
+
+
+
+    animate();      //this runs the function animate() below, done every frame
+    function animate() {
+        
+        //movevectors();
+        if (flight.dataset) {    
+            //UPDATE DRONE ROTATIONS
+			drone.position.z = (drone.position.z * 0.95) + ((flight.altitude - flight.takeoffaltitude)*0.05);
+            //update HUD
+
+        }
+        
+        
+
+        requestAnimationFrame( animate );
+        if (UI.cam == 0) {
+            renderer.render( scene, camera );
+        }
+        if (UI.cam == 1) {
+            renderer.render( scene, outsideCamera );
+        }
+        
+    }
+
+
+    /*
+        HELPER FUNCTIONS
+    */
+
+    copterupdate = function() {   
+        copter.forward.normalize();
+        copter.forwardDisplay.geometry.vertices[1].x = copter.forward.x
+        copter.forwardDisplay.geometry.vertices[1].y = copter.forward.y
+        copter.forwardDisplay.geometry.vertices[1].z = copter.forward.z
+        copter.forwardDisplay.geometry.verticesNeedUpdate = true;
+
+        copter.up.normalize();
+        copter.upDisplay.geometry.vertices[1].x = copter.up.x
+        copter.upDisplay.geometry.vertices[1].y = copter.up.y
+        copter.upDisplay.geometry.vertices[1].z = copter.up.z
+        copter.upDisplay.geometry.verticesNeedUpdate = true;    
+
+        copter.right.normalize();
+        copter.rightDisplay.geometry.vertices[1].x = copter.right.x
+        copter.rightDisplay.geometry.vertices[1].y = copter.right.y
+        copter.rightDisplay.geometry.vertices[1].z = copter.right.z
+        copter.rightDisplay.geometry.verticesNeedUpdate = true;    
+
+        copter.accel.normalize();
+        copter.accelDisplay.geometry.vertices[1].x = copter.accel.x
+        copter.accelDisplay.geometry.vertices[1].y = copter.accel.y
+        copter.accelDisplay.geometry.vertices[1].z = copter.accel.z
+        copter.accelDisplay.geometry.verticesNeedUpdate = true;    
+
+        copter.accelpredicted.normalize();
+        copter.accelpredictedDisplay.geometry.vertices[1].x = copter.accelpredicted.x
+        copter.accelpredictedDisplay.geometry.vertices[1].y = copter.accelpredicted.y
+        copter.accelpredictedDisplay.geometry.vertices[1].z = copter.accelpredicted.z
+        copter.accelpredictedDisplay.geometry.verticesNeedUpdate = true;    
+
+        copter.magnet.normalize();
+        copter.magnetDisplay.geometry.vertices[1].x = copter.magnet.x
+        copter.magnetDisplay.geometry.vertices[1].y = copter.magnet.y
+        copter.magnetDisplay.geometry.vertices[1].z = copter.magnet.z
+        copter.magnetDisplay.geometry.verticesNeedUpdate = true;    
+
+        copter.magnetpredicted.normalize();
+        copter.magnetpredictedDisplay.geometry.vertices[1].x = copter.magnetpredicted.x
+        copter.magnetpredictedDisplay.geometry.vertices[1].y = copter.magnetpredicted.y
+        copter.magnetpredictedDisplay.geometry.vertices[1].z = copter.magnetpredicted.z
+        copter.magnetpredictedDisplay.geometry.verticesNeedUpdate = true;            
+    }
+
+    axisupdate = function() {   
+        
+
+        axis.up.normalize();
+        axis.upDisplay.geometry.vertices[1].x = axis.up.x
+        axis.upDisplay.geometry.vertices[1].y = axis.up.y
+        axis.upDisplay.geometry.vertices[1].z = axis.up.z
+        axis.upDisplay.geometry.verticesNeedUpdate = true;    
+
+        axis.right.normalize();
+        axis.rightDisplay.geometry.vertices[1].x = axis.right.x
+        axis.rightDisplay.geometry.vertices[1].y = axis.right.y
+        axis.rightDisplay.geometry.vertices[1].z = axis.right.z
+        axis.rightDisplay.geometry.verticesNeedUpdate = true;    
+
+                 
+    }
+
+    function rgb(red,green,blue) {
+        var r = Math.round( red )
+        var g = Math.round( green )
+        var b = Math.round( blue )
+        return "rgb("+r+","+g+","+b+")"
+    }
+
+    function createVector(parent,v,col) {
+        //ACCEL - shows which way is down
+        //var accel = new THREE.Object3D();
+        var vectorgeometry = new THREE.Geometry();
+        vectorgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        vectorgeometry.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
+        
+        var veccol = new THREE.Color();
+        if (col) {
+            veccol.setRGB(Math.abs(col[0]), Math.abs(col[1]), Math.abs(col[2]))
+        } else {
+            var vec = new THREE.Vector3(v.x,v.y,v.z);
+            vec.normalize();        
+            veccol.setRGB(Math.abs(vec.x), Math.abs(vec.y), Math.abs(vec.z))
+        }
+        
+        var accelline = new THREE.Line(vectorgeometry, new THREE.LineBasicMaterial({
+            color: veccol,
+            fog:true
+        }));
+
+        parent.add(accelline);
+        return accelline;
+        //parent.add(accel)
+    }
+
+    function createLine(parent,v1,v2) {
+        var vectorgeometry = new THREE.Geometry();
+        vectorgeometry.vertices.push(new THREE.Vector3(v1.x, v1.y, v1.z));
+        vectorgeometry.vertices.push(new THREE.Vector3(v2.x, v2.y, v2.z));
+        var veccol = new THREE.Color();
+        veccol.setRGB(0, 0, 0)
+        var accelline = new THREE.Line(vectorgeometry, new THREE.LineBasicMaterial({
+            color: veccol
+        }));
+        parent.add(accelline);
+        return vectorgeometry;
+    }
+
+
+
+    function createAxisGrid(parent,offsetHeight,c1,c2) {
+        var offsetz = offsetHeight;
+        for (var x = -100; x < 100; x++) {
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(x, -100, 0 + offsetz));
+            geometry.vertices.push(new THREE.Vector3(x,  100, 0 + offsetz));
+            if (x % 10 == 0) {
+                var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+                    color: c1
+                }));
+            } else {
+            	if (c2) {
+	            	var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+	                    color: c2
+	                }));    	
+            	}
+                
+            }            
+            parent.add(line); 
+        }
+        for (var y = -100; y < 100; y++) {
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(-100, y, 0 + offsetz));
+            geometry.vertices.push(new THREE.Vector3( 100, y, 0 + offsetz));
+            if (y % 10 == 0) {
+                var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+                    color: c1
+                }));
+            } else {
+	            if (c2) {
+	                var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+	                    color: c2
+	                }));    
+            	}
+            }            
+            parent.add(line);           
+        }   
+    }
+
+
+    
+
+</script>
+	</body>
+</html>
