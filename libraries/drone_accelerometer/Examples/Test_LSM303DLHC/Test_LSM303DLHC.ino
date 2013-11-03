@@ -22,9 +22,12 @@
   
 #include "Arduino.h"
 #include <droneMath.h>
+double accel[3];
 #include <Accelerometer_LSM303DLHC.h>
 
 unsigned long timer;
+
+
 
 void setup() {
   

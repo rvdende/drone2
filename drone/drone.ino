@@ -47,7 +47,7 @@ double gyro0[SAMPLELENGTH];
 double gyro1[SAMPLELENGTH];
 double gyro2[SAMPLELENGTH];
 
-//double accel[3]        = {0,0,0};              
+double accel[3]        = {0,0,0};              
 double accel0[SAMPLELENGTH];
 double accel1[SAMPLELENGTH];
 double accel2[SAMPLELENGTH];
@@ -148,6 +148,10 @@ void setup() {
 
   serialStatus("initializing motors"); 
   initializeMotors();
+
+  serialStatus("initializing accel"); 
+  initializeAccel();  //zero calibration is now part of initialization process.
+
 
   serialStatus("initializing gyro"); 
   initializeGyro();  //zero calibration is now part of initialization process.
@@ -272,11 +276,11 @@ bool newJSONOUT() {
     Serial.print(",");
     Serial.print(up[2], 4);   
     Serial.print("],\"accel\":[");
-    Serial.print(accelvec[0], 4); 
+    Serial.print(accel[0], 4); 
     Serial.print(",");
-    Serial.print(accelvec[1], 4);   
+    Serial.print(accel[1], 4);   
     Serial.print(",");
-    Serial.print(accelvec[2], 4);   
+    Serial.print(accel[2], 4);   
     Serial.print("],\"compass\":[");
     Serial.print(compassvec[0]); 
     Serial.print(",");

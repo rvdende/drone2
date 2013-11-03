@@ -20,7 +20,7 @@ sp.list(function (err, ports) {
 	console.log("\ncomName\t\tmanufacturer")
   	console.log("====================================================================")
   	console.log(ports)
-	arduino = new sp.SerialPort("COM17", { baudrate: 115200, parser: sp.parsers.readline()  } ); 	
+	arduino = new sp.SerialPort("COM9", { baudrate: 115200, parser: sp.parsers.readline()  } ); 	
   	arduino.on("open", arduinoConnect);
 
   	/*

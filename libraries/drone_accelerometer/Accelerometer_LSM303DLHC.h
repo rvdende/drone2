@@ -124,6 +124,9 @@ void calibrateAccel()  {
 }
 
 void measureAccel() {
+  if (accelInitialized == false) { Serial.print("Warning Accelerometer not initialized."); }
+  if (accelCalibrated == false) { Serial.print("Warning Accelerometer not calibrated."); }
+
   Wire.beginTransmission(ACCEL_ADDRESS);
   Wire.write(0x28 | (1 << 7)); // assert the MSB of the address to get the accelerometer to do slave-transmit subaddress updating.
   Wire.endTransmission();  
@@ -138,15 +141,21 @@ void measureAccel() {
   // combine high and low bytes, then shift right to discard lowest 4 bits (which are meaningless)
   // GCC performs an arithmetic right shift for signed negative numbers, but this code will not work
   // if you port it to a compiler that does a logical right shift instead.
-  long accnew0 = ((int16_t)(xha << 8 | xla)) >> 4;
-  long accnew1 = ((int16_t)(yha << 8 | yla)) >> 4;
-  long accnew2 = ((int16_t)(zha << 8 | zla)) >> 4;
+  int accelraw[3];
+  accelraw[0] = ((int16_t)(xha << 8 | xla)) >> 4;
+  accelraw[1] = ((int16_t)(yha << 8 | yla)) >> 4;
+  accelraw[2] = ((int16_t)(zha << 8 | zla)) >> 4;
 
-  accel[0] = (double) accnew0;
-  accel[1] = (double) accnew1;
-  accel[2] = (double) accnew2;
+  double accelrawd[3];
+  accelrawd[0] = (double) accelraw[0];
+  accelrawd[1] = (double) accelraw[1];
+  accelrawd[2] = (double) accelraw[2];
 
-  rotate(accel, accelzerodiffcross, accelzerodiff);  //correct for physical alignment.
+  rotate(accelrawd, accelzerodiffcross, accelzerodiff);  //correct for physical alignment.
+
+  accel[0] = accelrawd[0];
+  accel[1] = accelrawd[1];
+  accel[2] = accelrawd[2];
 
   //meterPerSecSec[0] = accnew0 * accelScaleFactor[0] + runTimeAccelBias[0];
   //meterPerSecSec[1] = accnew1 * accelScaleFactor[1] + runTimeAccelBias[1];  

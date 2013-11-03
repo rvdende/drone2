@@ -42,8 +42,6 @@ byte accelSampleCount = 0;
 
 double accelDataRateHz = 200.0;        //how many samples per second
 double accelDataRateSec = 1.0/200.0;     //optimal time between samples, related to above
-
-double accel[3];
   
 void initializeAccel();
 void calibrateAccel();
