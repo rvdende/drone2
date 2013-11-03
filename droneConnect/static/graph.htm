@@ -22,9 +22,9 @@
 
 
 var Drone = function() {
-  this.P = 0.0; 
-  this.I = 0.0;  
-  this.D = 0.0;
+  this.P = 52.0; 
+  this.I = 19.0;  
+  this.D = 28.0;
   this.motor0 = 1000.0;
   this.motor1 = 1000.0;
   this.motor2 = 1000.0;
@@ -53,9 +53,9 @@ window.onload = function() {
   gui.add(dronecontrol, 'motor1', 1000.0, 2000.0).listen();
   gui.add(dronecontrol, 'motor2', 1000.0, 2000.0).listen();
   gui.add(dronecontrol, 'motor3', 1000.0, 2000.0).listen();
-  var pgui = gui.add(dronecontrol, 'P', 0.0, 200.0).step(0.1)
-  var igui = gui.add(dronecontrol, 'I', -20, 55.0).step(0.1)
-  var dgui = gui.add(dronecontrol, 'D', -20, 1000.75).step(0.1)
+  var pgui = gui.add(dronecontrol, 'P', 0.0, 100.0).step(0.1)
+  var igui = gui.add(dronecontrol, 'I', 0, 40.0).step(0.1)
+  var dgui = gui.add(dronecontrol, 'D', 0, 40.0).step(0.1)
 
   hardlimit.onFinishChange(function(value) {
     dronecontrol.uploadHardlimit();
@@ -93,9 +93,9 @@ two.bind('update', function() {
 
 var counter = 0;
 
-var gyro0 = makegraph("rgba(255, 55, 0, 225)");
-var gyro1 = makegraph("rgba(0, 125, 255, 225)");
-var heading = makegraph("rgba(0, 255, 55, 225)");
+var gyro0 = makegraph("rgba(125, 125, 125, 225)"); //RED
+var gyro1 = makegraph("rgba(255, 0, 0, 225)");  
+var heading = makegraph("rgba(0, 255, 55, 225)"); //GREEN
 /*
 var compassxgraph = makegraph("rgba(255, 50, 50, 225)");
 var compassygraph = makegraph("rgba(50, 255, 50, 225)");
@@ -115,9 +115,9 @@ var compasszgraph = makegraph("rgba(50, 50, 255, 225)");
 var socket = io.connect();
 
 socket.on('locator', function (data) {
-  updategraph(gyro0, parseFloat(data.arm0[2])*100);
-  updategraph(gyro1, parseFloat(data.arm1[2])*100);
-  updategraph(heading, parseFloat(data.headingdiff)*100);
+  //updategraph(gyro0, parseFloat(data.arm0[2])*300);
+  //updategraph(gyro1, parseFloat(data.arm1[2])*300); //RED
+  //updategraph(heading, parseFloat(data.headingdiff)*300);
 	dronecontrol.motor0 = data.motorthrottles[0]
 	dronecontrol.motor1 = data.motorthrottles[1]
 	dronecontrol.motor2 = data.motorthrottles[2]

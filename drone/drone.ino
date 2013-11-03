@@ -34,7 +34,7 @@ int barostate;     // is altimeter working
 
 // These get updated as fast as possible
 // SENSORS
-#define SAMPLELENGTH 5  
+#define SAMPLELENGTH 10
 
 int recievercounter = 0;
 int gyrocounter = 0;
@@ -257,7 +257,7 @@ bool newReceiver() {
 
 unsigned long timerJSONOUT;
 bool newJSONOUT() {
- if(abs(micros() - timerJSONOUT) >= 0.02*1000000) // 50hz
+ if(abs(micros() - timerJSONOUT) >= 0.1*1000000) 
   {    
     double delllta = (double) abs(micros() - timerJSONOUT) / 1000000;
     timerJSONOUT = micros();   
@@ -386,7 +386,7 @@ bool newGyro() {
 // ORIENTATION
 unsigned long timerOrientation;
 bool newOrientationUpdate() {
- if(abs(micros() - timerOrientation) >= 0.01*1000000) //abs for when micros() rolls over. gyroDataRateSec is set in Gyroscope.h and your Gyroscope_XXXXX.h  
+ if(abs(micros() - timerOrientation) >= gyroDataRateSec*1000000) //abs for when micros() rolls over. gyroDataRateSec is set in Gyroscope.h and your Gyroscope_XXXXX.h  
   {
     orientationcounter++;
     double deltatimeseconds = (double) abs(micros() - timerOrientation) / 1000000.0;
@@ -396,20 +396,19 @@ bool newOrientationUpdate() {
     orientationUpdate(gyro[0], gyro[1], gyro[2], deltatimeseconds);
   
     userthrottle = getRawChannelValue(3);
-    userpitch = getRawChannelValue(1)-1500;
-    userroll = getRawChannelValue(2)-1500;
-    useryaw = getRawChannelValue(4)-1500;    
+    userpitch = (getRawChannelValue(1)-1500)/10;
+    userroll = (getRawChannelValue(2)-1500)/10;
+    useryaw = (getRawChannelValue(4)-1500)/10;    
 
     double pidoutA = 0;
     double pidoutB = 0;
     if (deltatimeseconds < 0.5) {
-      pidoutA = pid_A_calcPID(arm0[2], 0.0, deltatimeseconds);  //BLUE  
-      pidoutB = pid_B_calcPID(arm1[2], 0.0, deltatimeseconds);  //RED      
+      pidoutA = pid_A_calcPID(arm0[2], 0.0, deltatimeseconds);  //WHITE  
+      pidoutB = pid_B_calcPID(arm1[2], 0.0, deltatimeseconds);  //RED  WORKS   
     }
     
     //do proportional control. SEE stabilisation.ino and api.ino
-    if (armed == 1) {
-        
+    if (armed == 1) {       
         
         //double pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN          
 
@@ -420,7 +419,7 @@ bool newOrientationUpdate() {
         motorCommand[3] = userthrottle-pidoutB-pidoutC;
         */
         motorCommand[0] = userthrottle + pidoutA - userpitch - userroll + useryaw;
-        motorCommand[1] = userthrottle + pidoutB - userpitch + userroll - useryaw; 
+        motorCommand[1] = userthrottle + pidoutB - userpitch + userroll - useryaw;
         motorCommand[2] = userthrottle - pidoutA + userpitch + userroll + useryaw;
         motorCommand[3] = userthrottle - pidoutB + userpitch - userroll - useryaw;
         writeMotors();

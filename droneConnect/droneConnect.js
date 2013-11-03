@@ -67,12 +67,11 @@ function dataParser(data) {
 	try {	
 	    indata = JSON.parse(data.toString()); 	
 	    if (indata.status) { console.log(indata); return; }		
-    	//process.stdout.clearLine();
-    	//process.stdout.cursorTo(0);
-    	//process.stdout.write("\n\n"+(1 / indata.t).toFixed(2) + "hz\t\n")	
-    	process.stdout.write(JSON.stringify(indata))	
-	    io.sockets.emit("locator", indata)	
-	    
+    	process.stdout.clearLine();
+    	process.stdout.cursorTo(0);
+    	process.stdout.write((1 / indata.t).toFixed(2) + "hz\t")	
+    	//process.stdout.write(JSON.stringify(indata))	
+	    io.sockets.emit("locator", indata)	   
 
 	  } catch (er) {
 	  	process.stdout.clearLine();
