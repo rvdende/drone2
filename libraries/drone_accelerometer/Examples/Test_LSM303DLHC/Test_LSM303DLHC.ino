@@ -41,11 +41,19 @@ void setup() {
   // changing the scale factor is necessary to get non-0 values from this test sketch
   // don't worry about how accurate the data is at this point, just make sure it changes as you move the board
   // accelScaleFactor[XAXIS]=accelScaleFactor[YAXIS]=accelScaleFactor[ZAXIS]=-0.038;
+  Serial.println("Acceleromter Calibration values");
+  Serial.println(accelzerodiffcross[0]);
+  Serial.println(accelzerodiffcross[1]);
+  Serial.println(accelzerodiffcross[2]);
+  Serial.println(accelzerodiff);
 }
+
 
 void loop() {
   
-  if((millis() - timer) > 10) // 100Hz
+  
+
+  if((millis() - timer) > 1000) // 100Hz
   {
     timer = millis();
     measureAccel();

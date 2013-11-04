@@ -105,16 +105,20 @@ void calibrateAccel()  {
 
   double realdown[3] = { 0.0, 0.0, -1.0 };
   double accelZeroVec[3] = { accelZero[0], accelZero[1], accelZero[2] };
-
   normalize(accelZeroVec);
-
   accelzerodiff = angle( accelZeroVec, realdown );  
   accelzerodiffcross[3];
-
   cross(accelzerodiffcross, accelZeroVec, realdown);
   normalize(accelzerodiffcross);  
 
-  //Serial.println(accelzerodiff);
+  
+  /*
+  Serial.println("Acceleromter Calibration values")
+  Serial.println(accelzerodiffcross[0])
+  Serial.println(accelzerodiffcross[1])
+  Serial.println(accelzerodiffcross[2])
+  Serial.println(accelzerodiff)
+  */
 
   rotate(accelZero, accelzerodiffcross, accelzerodiff);    
 
@@ -151,6 +155,12 @@ void measureAccel() {
   accelrawd[1] = (double) accelraw[1];
   accelrawd[2] = (double) accelraw[2];
 
+  ///////////////////////////////////////////////
+  //calibration offset Rouan
+  accelzerodiffcross = { 0.99, 0.17, 0.0};
+  accelzerodiff = 0.04;
+  ///////////////////////////////////////////////
+
   rotate(accelrawd, accelzerodiffcross, accelzerodiff);  //correct for physical alignment.
 
   accel[0] = accelrawd[0];
@@ -180,9 +190,7 @@ void measureAccelSum() {
   // if you port it to a compiler that does a logical right shift instead.
   long accnew0 = ((int16_t)(xha << 8 | xla)) >> 4;
   long accnew1 = ((int16_t)(yha << 8 | yla)) >> 4;
-  long accnew2 = ((int16_t)(zha << 8 | zla)) >> 4;
-
-  
+  long accnew2 = ((int16_t)(zha << 8 | zla)) >> 4;  
   
   accelSample[0] += accnew0;
   accelSample[1] += accnew1;  

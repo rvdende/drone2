@@ -14,12 +14,12 @@
 //////////////////////////////////////
 
                               
-double accelgain = 0.01;      // higher corrects drift faster. too high with above drag value too low will 
+double accelgain = 0.005;      // higher corrects drift faster. too high with above drag value too low will 
                               // overpower gyro and update waaay too slow
                               // higher values introduce more vibrational noise. 
                               // lower makes it less locked to world orientation
 
-double compassgain = 0.01;
+double compassgain = 0.005;
 
 //////////////////////////////////////////
 
@@ -34,7 +34,7 @@ int barostate;     // is altimeter working
 
 // These get updated as fast as possible
 // SENSORS
-#define SAMPLELENGTH 10
+#define SAMPLELENGTH 5
 
 int recievercounter = 0;
 int gyrocounter = 0;
@@ -77,10 +77,10 @@ double uptest[3]     = {   0.0, 0.0, 1.0};
 double righttest[3]  = {   1.0, 0.0, 0.0};
 
 double motorthrottles[4] = {0,0,0,0};
-double userthrottle = 1000.0;              //from the HUD, this should control altitude indirectly. W/S key in HUD
-double userpitch = 0;
-double userroll = 0;
-double useryaw = 0;
+double recieverThrotttle = 1000.0;              //from the HUD, this should control altitude indirectly. W/S key in HUD
+double recieverPitch = 0;
+double recieverRoll = 0;
+double recieverYaw = 0;
 
 double hardlimit = 1060.0;                //absolute max motor speed. this even overrides stability control.
 
@@ -138,16 +138,18 @@ int counter = 0;
 
 void setup() {
   pinMode(13, OUTPUT);
-  pinMode(20,INPUT);
-  pinMode(21,INPUT);
-  delay(1000);
   Wire.begin();
   #ifdef SERIAL
     Serial.begin(115200);
   #endif
-
   serialStatus("initializing motors"); 
   initializeMotors();
+
+  delay(500);
+
+  
+
+  
 
   serialStatus("initializing accel"); 
   initializeAccel();  //zero calibration is now part of initialization process.
@@ -168,7 +170,7 @@ void setup() {
 *********************************************************************/
 
 void loop() {  
-  digitalWrite(13, armed);
+  
     
   #ifdef API
     while (serial_stream.available()) 
@@ -182,28 +184,27 @@ void loop() {
 
   if (newReceiver()) {
     //testreciever(); //print receiver to serial. useful for setting trims.
-
     if (getRawChannelValue(1) > 0) {    //if signal      
-      if (getRawChannelValue(5) > 1500) {
+      if (getRawChannelValue(5) > 1300) {
 
         //FIRST ARMING, DO LOCK OF MAGNETIC NORTH.
         if (northlocked == false) {
-          doNorthLock = true;
+          //doNorthLock = true;
         }
 
         armed = 1;
-        digitalWrite(13, 1);
+        digitalWrite(13, HIGH);
       } else { 
         armed = 0;
-        digitalWrite(13, 0);
+        digitalWrite(13, LOW);
       }
     }
   }
 
   
-  if (newAccel()) { }  
-  if (newGyro()) { }
-  if (newOrientationUpdate()) { }
+  newAccel();
+  //newGyro(); //moved into orientation update.
+  newOrientationUpdate();
   
   #ifdef API
     newJSONOUT();
@@ -274,11 +275,11 @@ bool newJSONOUT() {
     Serial.print(",");
     Serial.print(up[2], 4);   
     Serial.print("],\"accel\":[");
-    Serial.print(accel[0], 4); 
+    Serial.print(accelvec[0], 4); 
     Serial.print(",");
-    Serial.print(accel[1], 4);   
+    Serial.print(accelvec[1], 4);   
     Serial.print(",");
-    Serial.print(accel[2], 4);   
+    Serial.print(accelvec[2], 4);   
     Serial.print("],\"compass\":[");
     Serial.print(compassvec[0]); 
     Serial.print(",");
@@ -355,8 +356,12 @@ bool newAccel() {
 // GYRO
 
 // This function only samples the gyro at its datasheet (and I2C register settings) rate. 760hz in my case.
+
+
 unsigned long timerGyro;
 bool newGyro() {
+/*
+
  if(abs(micros() - timerGyro) >= gyroDataRateSec*1000000) //abs for when micros() rolls over. gyroDataRateSec is set in Gyroscope.h and your Gyroscope_XXXXX.h
   {
     gyrocounter++;
@@ -364,13 +369,16 @@ bool newGyro() {
     //double deltatimeseconds = (double) abs(micros() - timerGyro) / 1000000.0;
 
     timerGyro = micros();
-    measureGyro();  //get readings from your gyro.         
+    measureGyro();  //get readings from your gyro.     
+
+
     pushShiftArray(gyro0, SAMPLELENGTH, gyro[0]); //push into array;
     pushShiftArray(gyro1, SAMPLELENGTH, gyro[1]); //push into array;
     pushShiftArray(gyro2, SAMPLELENGTH, gyro[2]); //push into array;
     gyro[0] = calculateAverageDouble(gyro0, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
     gyro[1] = calculateAverageDouble(gyro1, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
     gyro[2] = calculateAverageDouble(gyro2, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
+
 
     //if (deltatimeseconds > 0.1) { return false; }
 
@@ -379,7 +387,8 @@ bool newGyro() {
     return true;
   } else {
     return false;  
-  }  
+  }  */
+    return true;
 }
 
 /////////////////////////////////////////////
@@ -393,43 +402,61 @@ bool newOrientationUpdate() {
     timerOrientation = micros();  
     //Serial.println(deltatimeseconds,5);
 
+    measureGyro();  //get readings from your gyro.  
+    pushShiftArray(gyro0, SAMPLELENGTH, gyro[0]); //push into array;
+    pushShiftArray(gyro1, SAMPLELENGTH, gyro[1]); //push into array;
+    pushShiftArray(gyro2, SAMPLELENGTH, gyro[2]); //push into array;
+    gyro[0] = calculateAverageDouble(gyro0, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
+    gyro[1] = calculateAverageDouble(gyro1, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
+    gyro[2] = calculateAverageDouble(gyro2, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.    
     orientationUpdate(gyro[0], gyro[1], gyro[2], deltatimeseconds);
   
-    userthrottle = getRawChannelValue(3);
-    userpitch = (getRawChannelValue(1)-1500)/10;
-    userroll = (getRawChannelValue(2)-1500)/10;
-    useryaw = (getRawChannelValue(4)-1500)/10;    
+    recieverThrotttle = (double) getRawChannelValue(3);
+    recieverRoll = ((double) getRawChannelValue(1)-1500);
+    recieverPitch = ((double) getRawChannelValue(2)-1500);
+    recieverYaw = ((double) getRawChannelValue(4)-1500);    
 
     double pidoutA = 0;
     double pidoutB = 0;
-    if (deltatimeseconds < 0.5) {
+
+    if (abs(deltatimeseconds) < 0.1) {
       pidoutA = pid_A_calcPID(arm0[2], 0.0, deltatimeseconds);  //WHITE  
       pidoutB = pid_B_calcPID(arm1[2], 0.0, deltatimeseconds);  //RED  WORKS   
     }
+      
     
     //do proportional control. SEE stabilisation.ino and api.ino
     if (armed == 1) {       
+      
         
         //double pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN          
 
         
-        /*motorCommand[0] = userthrottle+pidoutA+pidoutC;
-        motorCommand[1] = userthrottle+pidoutB-pidoutC;
-        motorCommand[2] = userthrottle-pidoutA+pidoutC; 
-        motorCommand[3] = userthrottle-pidoutB-pidoutC;
+        /*motorCommand[0] = recieverThrotttle+pidoutA+pidoutC;
+        motorCommand[1] = recieverThrotttle+pidoutB-pidoutC;
+        motorCommand[2] = recieverThrotttle-pidoutA+pidoutC; 
+        motorCommand[3] = recieverThrotttle-pidoutB-pidoutC;
         */
-        motorCommand[0] = userthrottle + pidoutA - userpitch - userroll + useryaw;
-        motorCommand[1] = userthrottle + pidoutB - userpitch + userroll - useryaw;
-        motorCommand[2] = userthrottle - pidoutA + userpitch + userroll + useryaw;
-        motorCommand[3] = userthrottle - pidoutB + userpitch - userroll - useryaw;
+        
+        /*motorCommand[0] = recieverThrotttle + pidoutA - recieverRoll - recieverPitch + recieverYaw;
+        motorCommand[1] = recieverThrotttle + pidoutB - recieverRoll + recieverPitch - recieverYaw;
+        motorCommand[2] = recieverThrotttle - pidoutA + recieverRoll + recieverPitch + recieverYaw;
+        motorCommand[3] = recieverThrotttle - pidoutB + recieverRoll - recieverPitch - recieverYaw;
+        */
+        
+        motorCommand[0] = recieverThrotttle + pidoutA + (recieverPitch/10.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle + pidoutB + (recieverRoll/10.0) - (recieverYaw/10.0);
+        motorCommand[2] = recieverThrotttle - pidoutA - (recieverPitch/10.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle - pidoutB - (recieverRoll/10.0) - (recieverYaw/10.0);
         writeMotors();
       } else {
         clearPID();
         //RAW control.
-        motorCommand[0] = userthrottle - userpitch - userroll + useryaw;
-        motorCommand[1] = userthrottle - userpitch + userroll - useryaw; 
-        motorCommand[2] = userthrottle + userpitch + userroll + useryaw;
-        motorCommand[3] = userthrottle + userpitch - userroll - useryaw;
+        
+        motorCommand[0] = recieverThrotttle + (recieverPitch/10.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle + (recieverRoll/10.0) - (recieverYaw/10.0);
+        motorCommand[2] = recieverThrotttle - (recieverPitch/10.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle - (recieverRoll/10.0) - (recieverYaw/10.0);
         writeMotors();
     }
 

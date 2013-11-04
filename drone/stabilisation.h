@@ -1,9 +1,9 @@
 // PIDs!!
 //////////////////////////////////////////////////////////////////////////////////////
 
-double pid_A_Pgain      = 52.0; //119.2;
-double pid_A_Igain      = 19.0;   //5.35;
-double pid_A_Dgain      = 28.0;
+double pid_A_Pgain      = 84; //90.0; //119.2;
+double pid_A_Igain      = 6; //55.0;   //5.35;
+double pid_A_Dgain      = 26; //27.0;
 
 double pid_A_I          = 0.0;   
 double pid_A_inputlast  = 0.0;
@@ -24,9 +24,9 @@ double pid_A_calcPID(double inputA, double target, double timedelta) {
 
 //RED QUAD ARM AND OPPOSITE MOTOR
 
-double pid_B_Pgain      = 52.0; //do not touch
-double pid_B_Igain      = 19.0; //do not touch
-double pid_B_Dgain      = 28.0; //do not touch
+double pid_B_Pgain      = 84; ///90.0; //do not touch
+double pid_B_Igain      = 6; //55.0; //do not touch
+double pid_B_Dgain      = 26; //27.0; //do not touch
 
 double pid_B_I          = 0.0;   
 double pid_B_inputlast  = 0.0;
@@ -80,7 +80,16 @@ void stabilisationSetPIDgains(double inP, double inI, double inD) {
 
   //sets new gain values; 
   
+  /*
+  UNCOMMENT TO ALLOW API EDIT
+  pid_A_Pgain = inP;
+  pid_A_Igain = inI;
+  pid_A_Dgain = inD;  
 
+  pid_B_Pgain = inP;
+  pid_B_Igain = inI;
+  pid_B_Dgain = inD;    
+  */
   pid_C_Pgain = inP;
   pid_C_Igain = inI;
   pid_C_Dgain = inD;  
