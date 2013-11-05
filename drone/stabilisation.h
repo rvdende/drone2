@@ -45,9 +45,9 @@ double pid_B_calcPID(double inputB, double target, double timedelta) {
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-double pid_C_Pgain      = 1.0; 
-double pid_C_Igain      = 0.0;   
-double pid_C_Dgain      = 0.0;
+double pid_C_Pgain      = 20.0; 
+double pid_C_Igain      = 1.0;   
+double pid_C_Dgain      = 5.0;
 
 double pid_C_I          = 0.0;   
 double pid_C_inputlast  = 0.0;
@@ -89,9 +89,10 @@ void stabilisationSetPIDgains(double inP, double inI, double inD) {
   pid_B_Pgain = inP;
   pid_B_Igain = inI;
   pid_B_Dgain = inD;    
-  */
+  
   pid_C_Pgain = inP;
   pid_C_Igain = inI;
   pid_C_Dgain = inD;  
+  */
 }
 

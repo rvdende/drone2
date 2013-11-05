@@ -115,9 +115,9 @@ var compasszgraph = makegraph("rgba(50, 50, 255, 225)");
 var socket = io.connect();
 
 socket.on('locator', function (data) {
-  //updategraph(gyro0, parseFloat(data.arm0[2])*300);
-  //updategraph(gyro1, parseFloat(data.arm1[2])*300); //RED
-  //updategraph(heading, parseFloat(data.headingdiff)*300);
+  updategraph(gyro0, parseFloat(data.arm0[2])*300);
+  updategraph(gyro1, parseFloat(data.arm1[2])*300); //RED
+  updategraph(heading, parseFloat(data.headingdiff)*300);
 	dronecontrol.motor0 = data.motorthrottles[0]
 	dronecontrol.motor1 = data.motorthrottles[1]
 	dronecontrol.motor2 = data.motorthrottles[2]

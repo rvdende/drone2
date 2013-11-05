@@ -37,6 +37,12 @@ void orientationUpdate(double gx, double gy, double gz, double deltatimesec) {
   double currentheading[3] = {forward[0], forward[1], forward[2]};
   currentheading[2] = 0.0;
   normalize(currentheading);
+
+  if ((doHeadingLock == true)&&(headingLocked == false)) {
+    wantedheading = {currentheading[0],currentheading[1],currentheading[2]};
+    headingLocked = true;
+  }
+
   double headingcross[3];
   cross(headingcross, currentheading, wantedheading);
   headingcross[0] = 0.0;
@@ -44,6 +50,10 @@ void orientationUpdate(double gx, double gy, double gz, double deltatimesec) {
   normalize(headingcross);
     
   headingdiff = angle(currentheading, wantedheading) * headingcross[2];
+
+  //safety..
+  if (headingdiff > 0.25) { headingdiff = 0.25;}
+  if (headingdiff < -0.25) { headingdiff = -0.25;}
 }
 
 /* ################################################################ */
@@ -55,9 +65,7 @@ void orientationUpdate(double gx, double gy, double gz, double deltatimesec) {
 double compassmin[3] = {-538.0, -614.0, -455.0};
 double compassmax[3] = {78.0,   67.0,  116.0};
 
-bool doNorthLock = false;
-bool northlocked = false;
-double truenorth[3] = {0.0,0.5,0.8};
+
 
 void orientationDrift(double ax,double ay,double az,double mx,double my,double mz) {
   accelvec = { ax,  -ay,  az};
@@ -127,6 +135,7 @@ void orientationDrift(double ax,double ay,double az,double mx,double my,double m
   //compassvec[2] = 0.0;
   normalize(compassvec);
 
+  /*
   if ((doNorthLock == true)&&(northlocked == false)) {
     truenorth[0] = compassvec[0];
     truenorth[1] = compassvec[1];
@@ -142,17 +151,14 @@ void orientationDrift(double ax,double ay,double az,double mx,double my,double m
     //northlocked = true;
     //rotate everything so that north stays north.
     double truenorthcross[3];
+
     cross(truenorthcross, compassvec, truenorth);
+
     double northdiff = angle(compassvec, truenorth);      
     rotate(forward,    truenorthcross, northdiff*compassgain);
-    rotate(up,         truenorthcross, northdiff*compassgain);  
-    rotate(accelvec,   truenorthcross, northdiff*compassgain); 
-    rotate(compassvec, truenorthcross, northdiff*compassgain);  
+    rotate(up,         truenorthcross, northdiff*compassgain);   
   }
-  
-  
-  
-
+  */
 
 }
 

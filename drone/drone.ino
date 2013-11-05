@@ -34,7 +34,7 @@ int barostate;     // is altimeter working
 
 // These get updated as fast as possible
 // SENSORS
-#define SAMPLELENGTH 5
+#define SAMPLELENGTH 10
 
 int recievercounter = 0;
 int gyrocounter = 0;
@@ -43,9 +43,9 @@ int compasscounter = 0;
 int orientationcounter = 0;
 
 double gyro[3]         = {0,0,0};   
-double gyro0[SAMPLELENGTH];
-double gyro1[SAMPLELENGTH];
-double gyro2[SAMPLELENGTH];
+double gyro0[10]; //actually use 5
+double gyro1[10]; //actually use 5
+double gyro2[10]; //actually use 5
 
 double accel[3]        = {0,0,0};              
 double accel0[SAMPLELENGTH];
@@ -72,6 +72,17 @@ double arm1[3]       = {  -1.0,-1.0, 0.0};
 double accelvec[3]   = {   0.0, 0.0,-1.0};
 double compassvec[3] = {   0.0, -1.0,-1.0};
 
+/////////////////////////////////////
+bool doNorthLock = false;
+bool northlocked = false;
+double truenorth[3];
+
+double wantedheading[3] = {0.0,1.0,0.0};  //this should come from the HUD/user. Locked in with doHeadingLock in orientation.h
+double headingdiff = 0.0;                 //deviation from the heading (used for PID C)
+bool doHeadingLock = false;               //next cycle lock current heading?
+bool headingLocked = false;               //have we locked a heading?
+/////////////////////////////////////
+
 double forwardtest[3]= {   0.0, 1.0, 0.0};
 double uptest[3]     = {   0.0, 0.0, 1.0};
 double righttest[3]  = {   1.0, 0.0, 0.0};
@@ -84,8 +95,7 @@ double recieverYaw = 0;
 
 double hardlimit = 1060.0;                //absolute max motor speed. this even overrides stability control.
 
-double wantedheading[3] = {0.0,1.0,0.0};  //this should come from the HUD/user
-double headingdiff = 0.0;
+
 
 //WORLD
 double xaxis[3] = {  1.0,0.0,0.0};
@@ -138,31 +148,56 @@ int counter = 0;
 
 void setup() {
   pinMode(13, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(11, OUTPUT);
+  digitalWrite(13, HIGH); //YELLOW
+  digitalWrite(12, HIGH); //RED
+  digitalWrite(11, HIGH); //GREEN
+  delay(1000);
+  digitalWrite(13, LOW); //YELLOW
+  digitalWrite(11, LOW); //GREEN
+  
   Wire.begin();
   #ifdef SERIAL
     Serial.begin(115200);
   #endif
+  
+  delay(500);
+
+  digitalWrite(13, HIGH); //YELLOW
   serialStatus("initializing motors"); 
-  initializeMotors();
+  initializeMotors();  
+  digitalWrite(13, LOW); //YELLOW
+  
+  delay(500);
+  
+  digitalWrite(13, HIGH); //YELLOW
+  serialStatus("initializing accel"); 
+  initializeAccel();  //zero calibration is now part of initialization process.
+  digitalWrite(13, LOW); //YELLOW
 
   delay(500);
 
-  
-
-  
-
-  serialStatus("initializing accel"); 
-  initializeAccel();  //zero calibration is now part of initialization process.
-
-
+  digitalWrite(13, HIGH); //YELLOW
   serialStatus("initializing gyro"); 
   initializeGyro();  //zero calibration is now part of initialization process.
+  digitalWrite(13, LOW); //YELLOW
 
+  delay(500);
+
+  digitalWrite(13, HIGH); //YELLOW
   serialStatus("initializing compass"); 
   initializeMagnetometer();
+  digitalWrite(13, LOW); //YELLOW
 
+  delay(500);
+
+  digitalWrite(13, HIGH); //YELLOW
   serialStatus("initializing reciever"); 
   initializeReceiver();   
+  digitalWrite(12, LOW);
+
+  digitalWrite(11, HIGH); //GREEN
 }
 
 /**********************************************************************  
@@ -187,9 +222,13 @@ void loop() {
     if (getRawChannelValue(1) > 0) {    //if signal      
       if (getRawChannelValue(5) > 1300) {
 
-        //FIRST ARMING, DO LOCK OF MAGNETIC NORTH.
-        if (northlocked == false) {
-          //doNorthLock = true;
+        if ((doHeadingLock == false)&&(headingLocked == false)) {
+          doHeadingLock = true;
+        }
+
+        //FIRST ARMING, DO LOCK OF MAGNETIC NORTH.s
+        if ((doNorthLock==false)&&(northlocked == false)) {
+          doNorthLock = true;
         }
 
         armed = 1;
@@ -197,6 +236,7 @@ void loop() {
       } else { 
         armed = 0;
         digitalWrite(13, LOW);
+        
       }
     }
   }
@@ -403,12 +443,12 @@ bool newOrientationUpdate() {
     //Serial.println(deltatimeseconds,5);
 
     measureGyro();  //get readings from your gyro.  
-    pushShiftArray(gyro0, SAMPLELENGTH, gyro[0]); //push into array;
-    pushShiftArray(gyro1, SAMPLELENGTH, gyro[1]); //push into array;
-    pushShiftArray(gyro2, SAMPLELENGTH, gyro[2]); //push into array;
-    gyro[0] = calculateAverageDouble(gyro0, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
-    gyro[1] = calculateAverageDouble(gyro1, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
-    gyro[2] = calculateAverageDouble(gyro2, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.    
+    pushShiftArray(gyro0, 5, gyro[0]); //push into array;
+    pushShiftArray(gyro1, 5, gyro[1]); //push into array;
+    pushShiftArray(gyro2, 5, gyro[2]); //push into array;
+    gyro[0] = calculateAverageDouble(gyro0, 5); //calculates new moving average of last samples. This should clean the noise.
+    gyro[1] = calculateAverageDouble(gyro1, 5); //calculates new moving average of last samples. This should clean the noise.
+    gyro[2] = calculateAverageDouble(gyro2, 5); //calculates new moving average of last samples. This should clean the noise.    
     orientationUpdate(gyro[0], gyro[1], gyro[2], deltatimeseconds);
   
     recieverThrotttle = (double) getRawChannelValue(3);
@@ -418,45 +458,40 @@ bool newOrientationUpdate() {
 
     double pidoutA = 0;
     double pidoutB = 0;
+    double pidoutC = 0;
 
-    if (abs(deltatimeseconds) < 0.1) {
+    //if (abs(deltatimeseconds) < 0.1) {
       pidoutA = pid_A_calcPID(arm0[2], 0.0, deltatimeseconds);  //WHITE  
       pidoutB = pid_B_calcPID(arm1[2], 0.0, deltatimeseconds);  //RED  WORKS   
-    }
+      pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN YAW 
+    //}
       
     
     //do proportional control. SEE stabilisation.ino and api.ino
-    if (armed == 1) {       
-      
+    if (armed == 1) {           
         
-        //double pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN          
+        //Blink status light
+        if (random(50) < 10) {
+          if (random(10) < 5) { 
+            digitalWrite(12, LOW);
+          } else {
+            digitalWrite(12, HIGH);
+          }
+        }
 
-        
-        /*motorCommand[0] = recieverThrotttle+pidoutA+pidoutC;
-        motorCommand[1] = recieverThrotttle+pidoutB-pidoutC;
-        motorCommand[2] = recieverThrotttle-pidoutA+pidoutC; 
-        motorCommand[3] = recieverThrotttle-pidoutB-pidoutC;
-        */
-        
-        /*motorCommand[0] = recieverThrotttle + pidoutA - recieverRoll - recieverPitch + recieverYaw;
-        motorCommand[1] = recieverThrotttle + pidoutB - recieverRoll + recieverPitch - recieverYaw;
-        motorCommand[2] = recieverThrotttle - pidoutA + recieverRoll + recieverPitch + recieverYaw;
-        motorCommand[3] = recieverThrotttle - pidoutB + recieverRoll - recieverPitch - recieverYaw;
-        */
-        
-        motorCommand[0] = recieverThrotttle + pidoutA + (recieverPitch/10.0) + (recieverYaw/10.0);
-        motorCommand[1] = recieverThrotttle + pidoutB + (recieverRoll/10.0) - (recieverYaw/10.0);
-        motorCommand[2] = recieverThrotttle - pidoutA - (recieverPitch/10.0) + (recieverYaw/10.0);
-        motorCommand[3] = recieverThrotttle - pidoutB - (recieverRoll/10.0) - (recieverYaw/10.0);
+        motorCommand[0] = recieverThrotttle + pidoutA + pidoutC + (recieverPitch/20.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle + pidoutB - pidoutC + (recieverRoll/20.0)  - (recieverYaw/10.0);
+        motorCommand[2] = recieverThrotttle - pidoutA + pidoutC - (recieverPitch/20.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle - pidoutB - pidoutC - (recieverRoll/20.0)  - (recieverYaw/10.0);
         writeMotors();
       } else {
+        digitalWrite(12, LOW);
         clearPID();
-        //RAW control.
-        
-        motorCommand[0] = recieverThrotttle + (recieverPitch/10.0) + (recieverYaw/10.0);
-        motorCommand[1] = recieverThrotttle + (recieverRoll/10.0) - (recieverYaw/10.0);
-        motorCommand[2] = recieverThrotttle - (recieverPitch/10.0) + (recieverYaw/10.0);
-        motorCommand[3] = recieverThrotttle - (recieverRoll/10.0) - (recieverYaw/10.0);
+        //RAW control.        
+        motorCommand[0] = recieverThrotttle + (recieverPitch/20.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle + (recieverRoll/20.0) - (recieverYaw/10.0);
+        motorCommand[2] = recieverThrotttle - (recieverPitch/20.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle - (recieverRoll/20.0) - (recieverYaw/10.0);
         writeMotors();
     }
 
