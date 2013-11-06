@@ -37,7 +37,7 @@ First balance your drone with only 2 opposite side motors, till it can achieve b
 
 More detailed documentation to follow shortly including pinout diagram. Alternatively have a look in libraries for the motor control and receiver code to see or change pinouts.
 
-A lot of source is from `https://github.com/AeroQuad/AeroQuad` big thanks goes out to kha.
+A lot of source is from `https://github.com/AeroQuad/AeroQuad` big thanks goes out to @kh4.
 
 Hardware
 =========
