@@ -1,7 +1,7 @@
 drone
 =====
 
-DIY Arduino DUE (ARM 32bit) quad copter drone with node.js telemetry. The Arduino can reciever controller signals from your RC hobby remote, and mix in gyro compensated motor commands to help steer the drone.
+DIY Arduino DUE (ARM 32bit) quad copter drone with node.js telemetry. The arduino can recieves controller signals from your hobby RC remote and mixes in gyro compensated motor commands to help steer the drone.
 Aimed to be flexible enough that anyone can jump in and use their own hardware.
 
 WARNING
@@ -20,6 +20,8 @@ Status
 
 Documentation
 =============
+
+See hardware below.
 
 Set your arduino ide to the main folder so it finds the `/libraries` folder, alternatively copy them over to your libraries folder. Expand them to support your hardware.
 
@@ -42,7 +44,13 @@ A lot of source is from https://github.com/AeroQuad/AeroQuad big thanks goes out
 Hardware
 =========
 
-You can add support for your sensors, perhaps the calibration code can be factored out of the individual sensor "driver" code. Have a look at the existing files for reference.
+You'll need one of these. 
+
+![Arduino DUE!](http://robotics.org.za/image/cache/data/Arduino/duo001-500x500.jpg)
+
+http://arduino.cc/en/Main/ArduinoBoardDue Available in South Africa from http://robotics.org.za/index.php?route=product/product&path=47&product_id=604
+
+I'm using the MiniIMU-9 for gyro/accel/compass. You can add support for your sensors, perhaps the calibration code can be factored out of the individual sensor "driver" code. Have a look at the existing files for reference.
 
 [MinIMU-9 v2 Gyro, Accelerometer, and Compass (L3GD20 and LSM303DLHC Carrier)](http://www.pololu.com/catalog/product/1268) Gyro stabilisation complete. Uses double floating point dual vector (forward and up vectors) and quaternion rotations on every sensor reading cycle.
 
