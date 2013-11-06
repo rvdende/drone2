@@ -501,19 +501,19 @@ bool newOrientationUpdate() {
           }
         }
 
-        motorCommand[0] = recieverThrotttle + pidoutA + pidoutC + (recieverPitch/20.0) + (recieverYaw/10.0);
-        motorCommand[1] = recieverThrotttle + pidoutB - pidoutC + (recieverRoll/20.0)  - (recieverYaw/10.0);
-        motorCommand[2] = recieverThrotttle - pidoutA + pidoutC - (recieverPitch/20.0) + (recieverYaw/10.0);
-        motorCommand[3] = recieverThrotttle - pidoutB - pidoutC - (recieverRoll/20.0)  - (recieverYaw/10.0);
+        motorCommand[0] = recieverThrotttle + pidoutA + pidoutC + (recieverPitch/15.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle + pidoutB - pidoutC + (recieverRoll/15.0)  - (recieverYaw/10.0);
+        motorCommand[2] = recieverThrotttle - pidoutA + pidoutC - (recieverPitch/15.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle - pidoutB - pidoutC - (recieverRoll/15.0)  - (recieverYaw/10.0);
         writeMotors();
       } else {
         digitalWrite(12, LOW);
         clearPID();
         //RAW control.        
-        motorCommand[0] = recieverThrotttle + (recieverPitch/20.0) + (recieverYaw/10.0);
-        motorCommand[1] = recieverThrotttle + (recieverRoll/20.0) - (recieverYaw/10.0);
-        motorCommand[2] = recieverThrotttle - (recieverPitch/20.0) + (recieverYaw/10.0);
-        motorCommand[3] = recieverThrotttle - (recieverRoll/20.0) - (recieverYaw/10.0);
+        motorCommand[0] = recieverThrotttle + (recieverPitch/15.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle + (recieverRoll/15.0) - (recieverYaw/10.0);
+        motorCommand[2] = recieverThrotttle - (recieverPitch/15.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle - (recieverRoll/15.0) - (recieverYaw/10.0);
         writeMotors();
     }
 
