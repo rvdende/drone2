@@ -43,12 +43,12 @@ Hardware
 
 [Adafruit Ultimate GPS Logger Shield](http://www.adafruit.com/products/1272)
 
-![photo!](https://raw.github.com/fluentart/drone/master/photo.jpg)
+![photo!](https://raw.github.com/fluentart/drone2/master/photo.jpg)
 
 Telemetry
 ===========
 
-![pidCalibrate.jpg!](https://raw.github.com/fluentart/drone/master/pidCalibrate.jpg)
+![axis.jpg!]{https://raw.github.com/fluentart/drone2/master/droneConnect/static/img/axis.jpg) ![graph.jpg!]{https://raw.github.com/fluentart/drone2/master/droneConnect/static/img/graph.jpg)
 
 Open up command prompt.
 
