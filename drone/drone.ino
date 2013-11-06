@@ -155,7 +155,7 @@ void setup() {
   digitalWrite(13, HIGH); //YELLOW
   digitalWrite(12, HIGH); //RED
   digitalWrite(11, HIGH); //GREEN
-  delay(1000);
+  delay(2000);
   digitalWrite(13, LOW); //YELLOW
   digitalWrite(11, LOW); //GREEN
   
@@ -164,7 +164,7 @@ void setup() {
     Serial.begin(115200);
   #endif
   
-  delay(500);
+  delay(2000);
 
   digitalWrite(13, HIGH); //YELLOW
   serialStatus("initializing motors"); 
@@ -199,6 +199,14 @@ void setup() {
   initializeReceiver();   
   digitalWrite(12, LOW);
 
+  digitalWrite(11, HIGH); //GREEN
+  delay(500);
+  digitalWrite(11, LOW); //GREEN
+  delay(250);
+  digitalWrite(11, HIGH); //GREEN
+  delay(500);
+  digitalWrite(11, LOW); //GREEN
+  delay(250);  
   digitalWrite(11, HIGH); //GREEN
 }
 
