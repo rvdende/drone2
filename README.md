@@ -48,7 +48,9 @@ Hardware
 Telemetry
 ===========
 
-![axis.jpg!]{https://raw.github.com/fluentart/drone2/master/droneConnect/static/img/axis.jpg) ![graph.jpg!]{https://raw.github.com/fluentart/drone2/master/droneConnect/static/img/graph.jpg)
+droneConnect gives you a realtime 3D in the browser vector representation of what the drone sees, useful for debugging and developing further. Also included is a realtime 2D graph view showing realtime telemetry from the different axis and motor throttles. It also allows you to set the PID feedback loop calibration settings for the stabilisation of the drone.
+
+![axis.jpg!](https://raw.github.com/fluentart/drone2/master/droneConnect/static/img/axis.jpg) ![graph.jpg!](https://raw.github.com/fluentart/drone2/master/droneConnect/static/img/graph.jpg)
 
 Open up command prompt.
 
