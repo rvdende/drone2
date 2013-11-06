@@ -37,10 +37,12 @@ First balance your drone with only 2 opposite side motors, till it can achieve b
 
 More detailed documentation to follow shortly including pinout diagram. Alternatively have a look in libraries for the motor control and receiver code to see or change pinouts.
 
-A lot of source is from `https://github.com/AeroQuad/AeroQuad` big thanks goes out to https://github.com/kh4 for DUE reciver and motor code.
+A lot of source is from https://github.com/AeroQuad/AeroQuad big thanks goes out to https://github.com/kh4 for DUE reciver and motor code.
 
 Hardware
 =========
+
+You can add support for your sensors, perhaps the calibration code can be factored out of the individual sensor "driver" code. Have a look at the existing files for reference.
 
 [MinIMU-9 v2 Gyro, Accelerometer, and Compass (L3GD20 and LSM303DLHC Carrier)](http://www.pololu.com/catalog/product/1268)
 
