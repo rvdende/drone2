@@ -14,7 +14,7 @@ Status
 
     6  November  2013 - Release 1.0.0! With 5 successful flights in 2 days.
     2  November  2013 - Receiver support added and motor output simplified.
-    18 October   2013 - Sampling rate up to 1160hz! Reduced noise and responsiveness.
+    18 October   2013 - Sampling rate up to 1160hz! Reduced noise and increased responsiveness.
     09 October   2013 - Vector gyro/compass/accelerometer reference system completed
     27 September 2013 - Started
 
