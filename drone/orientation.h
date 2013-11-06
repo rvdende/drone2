@@ -38,22 +38,27 @@ void orientationUpdate(double gx, double gy, double gz, double deltatimesec) {
   currentheading[2] = 0.0;
   normalize(currentheading);
 
-  if ((doHeadingLock == true)&&(headingLocked == false)) {
-    wantedheading = {currentheading[0],currentheading[1],currentheading[2]};
-    headingLocked = true;
+  if (headingAlignmentDone == false) { //heading not locked yet
+    if (northAlignmentDone == true)  //once compass is snapped to north 
+    {
+      wantedheading = {currentheading[0],currentheading[1],currentheading[2]};  //we save current heading as the one we want to keep
+      headingAlignmentDone = true; //done. so this only runs once.
+    }  
   }
+  
 
-  double headingcross[3];
-  cross(headingcross, currentheading, wantedheading);
-  headingcross[0] = 0.0;
-  headingcross[1] = 0.0;  
-  normalize(headingcross);
-    
-  headingdiff = angle(currentheading, wantedheading) * headingcross[2];
-
-  //safety..
-  if (headingdiff > 0.25) { headingdiff = 0.25;}
-  if (headingdiff < -0.25) { headingdiff = -0.25;}
+  if (headingAlignmentDone == true) { //heading is locked
+    //CALCULATE headingdiff THE AMOUNT WE ARE OFF TARGET in YAW
+    double headingcross[3];
+    cross(headingcross, currentheading, wantedheading);
+    headingcross[0] = 0.0;
+    headingcross[1] = 0.0;  
+    normalize(headingcross);      
+    headingdiff = angle(currentheading, wantedheading) * headingcross[2];
+    if (headingdiff != headingdiff) {
+      headingdiff = 0.0;
+    }
+  }  
 }
 
 /* ################################################################ */
@@ -132,33 +137,32 @@ void orientationDrift(double ax,double ay,double az,double mx,double my,double m
   rotate(compassvec, gcross, gdiff*accelgain);   
   
   /// CALCULATE MAGNETIC DRIFT FIX
-  //compassvec[2] = 0.0;
+  compassvec[2] = 0.0;
   normalize(compassvec);
 
-  /*
-  if ((doNorthLock == true)&&(northlocked == false)) {
-    truenorth[0] = compassvec[0];
-    truenorth[1] = compassvec[1];
-    truenorth[2] = compassvec[2];
-    northlocked = true;
-    doNorthLock = false;
-  }
-
-  if (northlocked == true) {
-    //truenorth[0] = compassvec[0];
-    //truenorth[1] = compassvec[1];
-    //truenorth[2] = compassvec[2];
-    //northlocked = true;
-    //rotate everything so that north stays north.
+  
+  //rotate everything so that north stays north.
     double truenorthcross[3];
 
-    cross(truenorthcross, compassvec, truenorth);
 
-    double northdiff = angle(compassvec, truenorth);      
-    rotate(forward,    truenorthcross, northdiff*compassgain);
-    rotate(up,         truenorthcross, northdiff*compassgain);   
-  }
-  */
+    cross(truenorthcross, compassvec, truenorth);
+    normalize(truenorthcross);
+
+    double northdiff = angle(compassvec, truenorth);   
+       
+    if (northAlignmentDone == false) {
+      if (accelcounter > SAMPLELENGTH) {
+        //snap to north.
+        rotate(forward,    truenorthcross, northdiff);
+        rotate(up,         truenorthcross, northdiff);   
+        northAlignmentDone = true;  
+      }      
+    } else {
+      rotate(forward,    truenorthcross, northdiff*compassgain);
+      rotate(up,         truenorthcross, northdiff*compassgain);     
+    }
+    
+  
 
 }
 

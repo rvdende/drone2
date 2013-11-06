@@ -42,10 +42,10 @@ void setup() {
   // don't worry about how accurate the data is at this point, just make sure it changes as you move the board
   // accelScaleFactor[XAXIS]=accelScaleFactor[YAXIS]=accelScaleFactor[ZAXIS]=-0.038;
   Serial.println("Acceleromter Calibration values");
-  Serial.println(accelzerodiffcross[0]);
-  Serial.println(accelzerodiffcross[1]);
-  Serial.println(accelzerodiffcross[2]);
-  Serial.println(accelzerodiff);
+  Serial.println(accelzerodiffcross[0], 4);
+  Serial.println(accelzerodiffcross[1], 4);
+  Serial.println(accelzerodiffcross[2], 4);
+  Serial.println(accelzerodiff, 4);
 }
 
 
@@ -53,7 +53,7 @@ void loop() {
   
   
 
-  if((millis() - timer) > 1000) // 100Hz
+  if((millis() - timer) > 5000) // 100Hz
   {
     timer = millis();
     measureAccel();

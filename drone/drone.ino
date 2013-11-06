@@ -19,7 +19,7 @@ double accelgain = 0.005;      // higher corrects drift faster. too high with ab
                               // higher values introduce more vibrational noise. 
                               // lower makes it less locked to world orientation
 
-double compassgain = 0.005;
+double compassgain = 0.001;
 
 //////////////////////////////////////////
 
@@ -32,9 +32,8 @@ int barostate;     // is altimeter working
 
 
 
-// These get updated as fast as possible
 // SENSORS
-#define SAMPLELENGTH 10
+#define SAMPLELENGTH 15   //SMOOTHS ACCEL
 
 int recievercounter = 0;
 int gyrocounter = 0;
@@ -75,7 +74,10 @@ double compassvec[3] = {   0.0, -1.0,-1.0};
 /////////////////////////////////////
 bool doNorthLock = false;
 bool northlocked = false;
-double truenorth[3];
+double truenorth[3] = { 0.0, 1.0, 0.0 };
+
+bool northAlignmentDone = false;          //COMPASS NORTH LOCK
+bool headingAlignmentDone = false;        //HEADING LOCK. this gets locked in once we are armed.
 
 double wantedheading[3] = {0.0,1.0,0.0};  //this should come from the HUD/user. Locked in with doHeadingLock in orientation.h
 double headingdiff = 0.0;                 //deviation from the heading (used for PID C)
@@ -145,7 +147,7 @@ int counter = 0;
 /**********************************************************************
   SETUP
 *********************************************************************/
-
+int bootcounter = 0;
 void setup() {
   pinMode(13, OUTPUT);
   pinMode(12, OUTPUT);
@@ -234,9 +236,10 @@ void loop() {
         armed = 1;
         digitalWrite(13, HIGH);
       } else { 
+        //NOT ARMED
         armed = 0;
-        digitalWrite(13, LOW);
-        
+        headingAlignmentDone = false; //causes an update of currentheading to become the new wantedheading once we are armed.
+        digitalWrite(13, LOW);        
       }
     }
   }
@@ -376,13 +379,13 @@ bool newAccel() {
     
     measureMagnetometerRaw();
 
-    pushShiftArray(compass0, SAMPLELENGTH, compass[0]); //push into array;
+    /*pushShiftArray(compass0, SAMPLELENGTH, compass[0]); //push into array;
     pushShiftArray(compass1, SAMPLELENGTH, compass[1]); //push into array;
     pushShiftArray(compass2, SAMPLELENGTH, compass[2]); //push into array;
     compass[0] = calculateAverageDouble(compass0, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
     compass[1] = calculateAverageDouble(compass1, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
     compass[2] = calculateAverageDouble(compass2, SAMPLELENGTH); //calculates new moving average of last samples. This should clean the noise.
-
+    */
     orientationDrift(accel[0],accel[1],accel[2],compass[0],compass[1],compass[2]); 
 
     return true;
@@ -443,18 +446,24 @@ bool newOrientationUpdate() {
     //Serial.println(deltatimeseconds,5);
 
     measureGyro();  //get readings from your gyro.  
-    pushShiftArray(gyro0, 5, gyro[0]); //push into array;
-    pushShiftArray(gyro1, 5, gyro[1]); //push into array;
-    pushShiftArray(gyro2, 5, gyro[2]); //push into array;
-    gyro[0] = calculateAverageDouble(gyro0, 5); //calculates new moving average of last samples. This should clean the noise.
-    gyro[1] = calculateAverageDouble(gyro1, 5); //calculates new moving average of last samples. This should clean the noise.
-    gyro[2] = calculateAverageDouble(gyro2, 5); //calculates new moving average of last samples. This should clean the noise.    
+    
+    /*
+    //SMOOTH GYRO?
+    pushShiftArray(gyro0, 3 , gyro[0]); //push into array;
+    pushShiftArray(gyro1, 3 , gyro[1]); //push into array;
+    pushShiftArray(gyro2, 3 , gyro[2]); //push into array;
+    gyro[0] = calculateAverageDouble(gyro0, 3 ); //calculates new moving average of last samples. This should clean the noise.
+    gyro[1] = calculateAverageDouble(gyro1, 3 ); //calculates new moving average of last samples. This should clean the noise.
+    gyro[2] = calculateAverageDouble(gyro2, 3 ); //calculates new moving average of last samples. This should clean the noise.    
+    //end smooth
+    */
+    
     orientationUpdate(gyro[0], gyro[1], gyro[2], deltatimeseconds);
   
-    recieverThrotttle = (double) getRawChannelValue(3);
-    recieverRoll = ((double) getRawChannelValue(1)-1500);
-    recieverPitch = ((double) getRawChannelValue(2)-1500);
-    recieverYaw = ((double) getRawChannelValue(4)-1500);    
+    recieverThrotttle = (recieverThrotttle * 0.95) + (((double) getRawChannelValue(3)) * 0.05);
+    recieverRoll = (recieverRoll * 0.95) + (((double) getRawChannelValue(1)-1500)*0.05);
+    recieverPitch = (recieverPitch * 0.95) + (((double) getRawChannelValue(2)-1500)*0.05);
+    recieverYaw = (recieverYaw * 0.95) + (((double) getRawChannelValue(4)-1500)*0.05);    
 
     double pidoutA = 0;
     double pidoutB = 0;
@@ -464,6 +473,11 @@ bool newOrientationUpdate() {
       pidoutA = pid_A_calcPID(arm0[2], 0.0, deltatimeseconds);  //WHITE  
       pidoutB = pid_B_calcPID(arm1[2], 0.0, deltatimeseconds);  //RED  WORKS   
       pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN YAW 
+
+      //safety limits on PID
+      pidoutA = limitDouble(pidoutA, -100, 100);
+      pidoutB = limitDouble(pidoutB, -100, 100);
+      pidoutC = limitDouble(pidoutC, -100, 100);
     //}
       
     

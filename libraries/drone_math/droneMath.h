@@ -2,6 +2,12 @@
 #define _DRONE_MATH_H_
 #include "Arduino.h"
 
+double limitDouble(double input, double min, double max) {
+  if (input < min) { return min; }
+  if (input > max) { return max; }
+  return input;
+}
+
 void QuaternionMultiply(double out[4], double a[4],double b[4]) { 
   out[3] = a[3]*b[3] - a[0]*b[0] - a[1]*b[1] - a[2]*b[2];
   out[0] = a[3]*b[0] + a[0]*b[3] + a[1]*b[2] - a[2]*b[1];
