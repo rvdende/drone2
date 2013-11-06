@@ -44,11 +44,11 @@ Hardware
 
 You can add support for your sensors, perhaps the calibration code can be factored out of the individual sensor "driver" code. Have a look at the existing files for reference.
 
-[MinIMU-9 v2 Gyro, Accelerometer, and Compass (L3GD20 and LSM303DLHC Carrier)](http://www.pololu.com/catalog/product/1268)
+[MinIMU-9 v2 Gyro, Accelerometer, and Compass (L3GD20 and LSM303DLHC Carrier)](http://www.pololu.com/catalog/product/1268) Gyro stabilisation complete. Uses double floating point dual vector (forward and up vectors) and quaternion rotations on every sensor reading cycle.
 
-[Barometric Pressure Sensor - BMP085 Breakout](https://www.sparkfun.com/products/11282)
+[Barometric Pressure Sensor - BMP085 Breakout](https://www.sparkfun.com/products/11282) Altitude support not added yet. Barometric and sonar aimed for 2.1.0
 
-[Adafruit Ultimate GPS Logger Shield](http://www.adafruit.com/products/1272)
+[Adafruit Ultimate GPS Logger Shield](http://www.adafruit.com/products/1272) GPS support not added yet. Aimed for 2.0.0
 
 ![photo!](https://raw.github.com/fluentart/drone2/master/photo.jpg)
 
