@@ -1,7 +1,7 @@
 drone
 =====
 
-DIY Arduino DUE (ARM 32bit) quad copter drone with node.js telemetry. The arduino can recieves controller signals from your hobby RC remote and mixes in gyro compensated motor commands to help steer the drone.
+DIY Arduino DUE (ARM 32bit) quad copter drone with node.js telemetry. The arduino recieves controller signals from your hobby RC remote and mixes in gyro compensated motor commands to help steer the drone.
 Aimed to be flexible enough that anyone can jump in and use their own hardware.
 
 ![!drone](http://i.imgur.com/qgPksgo.jpg)
