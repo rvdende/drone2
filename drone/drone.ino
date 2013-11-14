@@ -5,6 +5,9 @@
 
 
 
+#define STATUSLED_RED 11
+#define STATUSLED_ORANGE 12
+#define STATUSLED_GREEN 13
 
 
 //how fast we correct gyro drift. see orientationDrift()
@@ -14,12 +17,12 @@
 //////////////////////////////////////
 
                               
-double accelgain = 0.005;      // higher corrects drift faster. too high with above drag value too low will 
+double accelgain = 0.0025;      // higher corrects drift faster. too high with above drag value too low will 
                               // overpower gyro and update waaay too slow
                               // higher values introduce more vibrational noise. 
                               // lower makes it less locked to world orientation
 
-double compassgain = 0.001;
+double compassgain = 0.00001;
 
 //////////////////////////////////////////
 
@@ -149,65 +152,66 @@ int counter = 0;
 *********************************************************************/
 int bootcounter = 0;
 void setup() {
-  pinMode(13, OUTPUT);
-  pinMode(12, OUTPUT);
-  pinMode(11, OUTPUT);
-  digitalWrite(13, HIGH); //YELLOW
-  digitalWrite(12, HIGH); //RED
-  digitalWrite(11, HIGH); //GREEN
-  delay(2000);
-  digitalWrite(13, LOW); //YELLOW
-  digitalWrite(11, LOW); //GREEN
+  pinMode(STATUSLED_ORANGE, OUTPUT);
+  pinMode(STATUSLED_RED, OUTPUT);
+  pinMode(STATUSLED_GREEN, OUTPUT);
+  digitalWrite(STATUSLED_RED, HIGH); //RED
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW  
+  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
+  delay(1000);
+  digitalWrite(STATUSLED_RED, LOW); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
+  digitalWrite(STATUSLED_GREEN, LOW); //GREEN
   
   Wire.begin();
   #ifdef SERIAL
     Serial.begin(115200);
   #endif
   
-  delay(2000);
+  delay(1000);
 
-  digitalWrite(13, HIGH); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
   serialStatus("initializing motors"); 
   initializeMotors();  
-  digitalWrite(13, LOW); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
   
   delay(500);
   
-  digitalWrite(13, HIGH); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
   serialStatus("initializing accel"); 
   initializeAccel();  //zero calibration is now part of initialization process.
-  digitalWrite(13, LOW); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
 
   delay(500);
 
-  digitalWrite(13, HIGH); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
   serialStatus("initializing gyro"); 
   initializeGyro();  //zero calibration is now part of initialization process.
-  digitalWrite(13, LOW); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
 
   delay(500);
 
-  digitalWrite(13, HIGH); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
   serialStatus("initializing compass"); 
   initializeMagnetometer();
-  digitalWrite(13, LOW); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
 
   delay(500);
 
-  digitalWrite(13, HIGH); //YELLOW
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
   serialStatus("initializing reciever"); 
   initializeReceiver();   
-  digitalWrite(12, LOW);
+  digitalWrite(STATUSLED_RED, LOW);
 
-  digitalWrite(11, HIGH); //GREEN
+  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
   delay(500);
-  digitalWrite(11, LOW); //GREEN
+  digitalWrite(STATUSLED_GREEN, LOW); //GREEN
   delay(250);
-  digitalWrite(11, HIGH); //GREEN
+  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
   delay(500);
-  digitalWrite(11, LOW); //GREEN
+  digitalWrite(STATUSLED_GREEN, LOW); //GREEN
   delay(250);  
-  digitalWrite(11, HIGH); //GREEN
+  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
 }
 
 /**********************************************************************  
@@ -242,12 +246,12 @@ void loop() {
         }
 
         armed = 1;
-        digitalWrite(13, HIGH);
+        digitalWrite(STATUSLED_ORANGE, HIGH);
       } else { 
         //NOT ARMED
         armed = 0;
         headingAlignmentDone = false; //causes an update of currentheading to become the new wantedheading once we are armed.
-        digitalWrite(13, LOW);        
+        digitalWrite(STATUSLED_ORANGE, LOW);        
       }
     }
   }
@@ -478,8 +482,8 @@ bool newOrientationUpdate() {
     double pidoutC = 0;
 
     //if (abs(deltatimeseconds) < 0.1) {
-      pidoutA = pid_A_calcPID(arm0[2], 0.0, deltatimeseconds);  //WHITE  
-      pidoutB = pid_B_calcPID(arm1[2], 0.0, deltatimeseconds);  //RED  WORKS   
+      pidoutA = pid_A_calcPID(arm0[2], (PI*0.25) * (recieverPitch/500), deltatimeseconds);  //WHITE  
+      pidoutB = pid_B_calcPID(arm1[2], (PI*0.25) * (recieverRoll/500), deltatimeseconds);  //RED  WORKS   
       pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN YAW 
 
       //safety limits on PID
@@ -495,19 +499,19 @@ bool newOrientationUpdate() {
         //Blink status light
         if (random(50) < 10) {
           if (random(10) < 5) { 
-            digitalWrite(12, LOW);
+            digitalWrite(STATUSLED_RED, LOW);
           } else {
-            digitalWrite(12, HIGH);
+            digitalWrite(STATUSLED_RED, HIGH);
           }
         }
 
-        motorCommand[0] = recieverThrotttle + pidoutA + pidoutC + (recieverPitch/15.0) + (recieverYaw/10.0);
-        motorCommand[1] = recieverThrotttle + pidoutB - pidoutC + (recieverRoll/15.0)  - (recieverYaw/10.0);
-        motorCommand[2] = recieverThrotttle - pidoutA + pidoutC - (recieverPitch/15.0) + (recieverYaw/10.0);
-        motorCommand[3] = recieverThrotttle - pidoutB - pidoutC - (recieverRoll/15.0)  - (recieverYaw/10.0);
+        motorCommand[0] = recieverThrotttle + pidoutA + pidoutC; 
+        motorCommand[1] = recieverThrotttle + pidoutB - pidoutC; 
+        motorCommand[2] = recieverThrotttle - pidoutA + pidoutC; 
+        motorCommand[3] = recieverThrotttle - pidoutB - pidoutC; 
         writeMotors();
       } else {
-        digitalWrite(12, LOW);
+        digitalWrite(STATUSLED_RED, LOW);
         clearPID();
         //RAW control.        
         motorCommand[0] = recieverThrotttle + (recieverPitch/15.0) + (recieverYaw/10.0);
