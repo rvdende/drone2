@@ -17,12 +17,12 @@
 //////////////////////////////////////
 
                               
-double accelgain = 0.0025;      // higher corrects drift faster. too high with above drag value too low will 
+double accelgain = 0.025;      // higher corrects drift faster. too high with above drag value too low will 
                               // overpower gyro and update waaay too slow
                               // higher values introduce more vibrational noise. 
                               // lower makes it less locked to world orientation
 
-double compassgain = 0.00001;
+double compassgain = 0.0001;
 
 //////////////////////////////////////////
 
@@ -170,11 +170,7 @@ void setup() {
   
   delay(1000);
 
-  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
-  serialStatus("initializing motors"); 
-  initializeMotors();  
-  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
-  
+
   delay(500);
   
   digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
@@ -202,16 +198,15 @@ void setup() {
   serialStatus("initializing reciever"); 
   initializeReceiver();   
   digitalWrite(STATUSLED_RED, LOW);
+  
+  
+  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
+  digitalWrite(STATUSLED_ORANGE, HIGH); //YELLOW
+  serialStatus("initializing motors"); 
+  initializeMotors();  
 
-  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
-  delay(500);
-  digitalWrite(STATUSLED_GREEN, LOW); //GREEN
-  delay(250);
-  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
-  delay(500);
-  digitalWrite(STATUSLED_GREEN, LOW); //GREEN
-  delay(250);  
-  digitalWrite(STATUSLED_GREEN, HIGH); //GREEN
+  digitalWrite(STATUSLED_ORANGE, LOW); //YELLOW
+
 }
 
 /**********************************************************************  
@@ -515,10 +510,10 @@ bool newOrientationUpdate() {
         */
 
         //QUAD X SETUP
-        motorCommand[0] = recieverThrotttle - pidoutA - pidoutB - pidoutC; 
-        motorCommand[1] = recieverThrotttle - pidoutA + pidoutB + pidoutC; 
-        motorCommand[2] = recieverThrotttle + pidoutA + pidoutB - pidoutC; 
-        motorCommand[3] = recieverThrotttle + pidoutA - pidoutB + pidoutC; 
+        motorCommand[0] = recieverThrotttle - pidoutA - pidoutB + pidoutC; 
+        motorCommand[1] = recieverThrotttle - pidoutA + pidoutB - pidoutC; 
+        motorCommand[2] = recieverThrotttle + pidoutA + pidoutB + pidoutC; 
+        motorCommand[3] = recieverThrotttle + pidoutA - pidoutB - pidoutC; 
         writeMotors();
       } else {
         digitalWrite(STATUSLED_RED, LOW);
@@ -533,10 +528,10 @@ bool newOrientationUpdate() {
         */
 
         //QUAD X SETUP
-        motorCommand[0] = recieverThrotttle - (recieverPitch/10.0) - (recieverRoll/10.0) - (recieverYaw/10.0);
-        motorCommand[1] = recieverThrotttle - (recieverPitch/10.0) + (recieverRoll/10.0) + (recieverYaw/10.0); 
-        motorCommand[2] = recieverThrotttle + (recieverPitch/10.0) + (recieverRoll/10.0) - (recieverYaw/10.0);
-        motorCommand[3] = recieverThrotttle + (recieverPitch/10.0) - (recieverRoll/10.0) + (recieverYaw/10.0);
+        motorCommand[0] = recieverThrotttle - (recieverPitch/10.0) - (recieverRoll/10.0) + (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle - (recieverPitch/10.0) + (recieverRoll/10.0) - (recieverYaw/10.0); 
+        motorCommand[2] = recieverThrotttle + (recieverPitch/10.0) + (recieverRoll/10.0) + (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle + (recieverPitch/10.0) - (recieverRoll/10.0) - (recieverYaw/10.0);
         writeMotors();
     }
 
