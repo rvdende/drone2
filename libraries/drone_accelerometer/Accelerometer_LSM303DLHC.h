@@ -157,8 +157,8 @@ void measureAccel() {
 
   ///////////////////////////////////////////////
   //calibration offset Rouan
-  accelzerodiffcross = { 0.3052, -0.9523, 0.00};
-  accelzerodiff = 0.1187;
+  accelzerodiffcross = { 0.8422, -0.5392, 0.0};
+  accelzerodiff = 0.0499;
   ///////////////////////////////////////////////
 
   rotate(accelrawd, accelzerodiffcross, accelzerodiff);  //correct for physical alignment.

@@ -30,8 +30,10 @@ void orientationUpdate(double gx, double gy, double gz, double deltatimesec) {
   //we only have 2 arms, opposite sides are just inverse
   copy(arm0, forward);
   copy(arm1, forward);
-  rotate(arm0, up, PI/4);    
-  rotate(arm1, up, PI/4*3);  
+
+  //SET UP YOUR QUAD SO THE ARMS line up with your quad's arms.
+  rotate(arm0, up, PI/4*-3);    //white (front)
+  rotate(arm1, up, PI/-4);  //red (left side)
   
   //CALCULATE WANTED HEADING AND CURRENT HEADING DIFF  
   double currentheading[3] = {forward[0], forward[1], forward[2]};

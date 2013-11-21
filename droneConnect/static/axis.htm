@@ -39,6 +39,8 @@ var up = createVector(scene,new THREE.Vector3(),[0,0.0,0.5]);
 //var compassvec = createVector(scene,new THREE.Vector3(),[0.7,0.7,0.7]);
 
     socket.on('locator', function (data) {
+
+        console.log(data)
         updatevector(arm0disp, data.arm0)
         updatevector(arm1disp, data.arm1)
         updatevector(accelvec, data.accel)

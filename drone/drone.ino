@@ -65,9 +65,9 @@ double compass2[SAMPLELENGTH];
 
 
 // VECTORS / SELF
-double forward[3]    = {   0.0, 1.0, 0.0};        // forward vector for drone, north at start
-double up[3]         = {   0.0, 0.0, 1.0};        // up vector for drone, skywards at start
-double right[3]      = {   1.0, 0.0, 0.0};        // right vector for drone, for consistency and easier calculations.
+double forward[3]    = {   0.0, 1.0, 0.0};        // forward vector for gyro, north at start
+double up[3]         = {   0.0, 0.0, 1.0};        // up vector for gyro, skywards at start
+double right[3]      = {   1.0, 0.0, 0.0};        // right vector for gyro, for consistency and easier calculations.
 double arm0[3]       = {  -1.0, 1.0, 0.0};
 double arm1[3]       = {  -1.0,-1.0, 0.0};
 
@@ -472,19 +472,29 @@ bool newOrientationUpdate() {
     
     orientationUpdate(gyro[0], gyro[1], gyro[2], deltatimeseconds);
   
+    /*
+    //SMOOTHING on reciever input?
     recieverThrotttle = (recieverThrotttle * 0.95) + (((double) getRawChannelValue(3)) * 0.05);
     recieverRoll = (recieverRoll * 0.95) + (((double) getRawChannelValue(1)-1500)*0.05);
     recieverPitch = (recieverPitch * 0.95) + (((double) getRawChannelValue(2)-1500)*0.05);
     recieverYaw = (recieverYaw * 0.95) + (((double) getRawChannelValue(4)-1500)*0.05);    
+    */
+
+    recieverThrotttle = (double) getRawChannelValue(3);
+    //we minus by the raw value so they are centered. alternatively you can use your trims.
+    //remember to recalibrate your ESC throttle range!
+    recieverRoll = (double) getRawChannelValue(1)-1518;
+    recieverPitch = (double) getRawChannelValue(2)-1520;
+    recieverYaw = (double) getRawChannelValue(4)-1506;    
 
     double pidoutA = 0;
     double pidoutB = 0;
     double pidoutC = 0;
 
     //if (abs(deltatimeseconds) < 0.1) {
-      pidoutA = pid_A_calcPID(arm0[2], (PI*0.25) * (recieverPitch/500), deltatimeseconds);  //WHITE  
-      pidoutB = pid_B_calcPID(arm1[2], (PI*0.25) * (recieverRoll/500), deltatimeseconds);  //RED  WORKS   
-      pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);  //GREEN YAW 
+      pidoutA = pid_A_calcPID(arm0[2], (PI*0.25) * (recieverPitch/500), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
+      pidoutB = pid_B_calcPID(arm1[2], (PI*0.25) * (recieverRoll/500), deltatimeseconds);   //RED     LEFT   ROLL
+      pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);                          //GREEN   UP     YAW 
 
       //safety limits on PID
       pidoutA = limitDouble(pidoutA, -100, 100);
@@ -495,29 +505,38 @@ bool newOrientationUpdate() {
     
     //do proportional control. SEE stabilisation.ino and api.ino
     if (armed == 1) {           
-        
-        //Blink status light
-        if (random(50) < 10) {
-          if (random(10) < 5) { 
-            digitalWrite(STATUSLED_RED, LOW);
-          } else {
-            digitalWrite(STATUSLED_RED, HIGH);
-          }
-        }
-
+        digitalWrite(STATUSLED_RED, HIGH);
+        /*
+        //QUAD + SETUP
         motorCommand[0] = recieverThrotttle + pidoutA + pidoutC; 
         motorCommand[1] = recieverThrotttle + pidoutB - pidoutC; 
         motorCommand[2] = recieverThrotttle - pidoutA + pidoutC; 
         motorCommand[3] = recieverThrotttle - pidoutB - pidoutC; 
+        */
+
+        //QUAD X SETUP
+        motorCommand[0] = recieverThrotttle - pidoutA - pidoutB - pidoutC; 
+        motorCommand[1] = recieverThrotttle - pidoutA + pidoutB + pidoutC; 
+        motorCommand[2] = recieverThrotttle + pidoutA + pidoutB - pidoutC; 
+        motorCommand[3] = recieverThrotttle + pidoutA - pidoutB + pidoutC; 
         writeMotors();
       } else {
         digitalWrite(STATUSLED_RED, LOW);
         clearPID();
         //RAW control.        
+        /*
+        //QUAD + SETUP
         motorCommand[0] = recieverThrotttle + (recieverPitch/15.0) + (recieverYaw/10.0);
         motorCommand[1] = recieverThrotttle + (recieverRoll/15.0) - (recieverYaw/10.0);
         motorCommand[2] = recieverThrotttle - (recieverPitch/15.0) + (recieverYaw/10.0);
         motorCommand[3] = recieverThrotttle - (recieverRoll/15.0) - (recieverYaw/10.0);
+        */
+
+        //QUAD X SETUP
+        motorCommand[0] = recieverThrotttle - (recieverPitch/10.0) - (recieverRoll/10.0) - (recieverYaw/10.0);
+        motorCommand[1] = recieverThrotttle - (recieverPitch/10.0) + (recieverRoll/10.0) + (recieverYaw/10.0); 
+        motorCommand[2] = recieverThrotttle + (recieverPitch/10.0) + (recieverRoll/10.0) - (recieverYaw/10.0);
+        motorCommand[3] = recieverThrotttle + (recieverPitch/10.0) - (recieverRoll/10.0) + (recieverYaw/10.0);
         writeMotors();
     }
 
