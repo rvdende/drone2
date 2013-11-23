@@ -1,9 +1,9 @@
 // PIDs!!
 //////////////////////////////////////////////////////////////////////////////////////
 
-double pid_A_Pgain      = 84; //90.0; //119.2;
-double pid_A_Igain      = 6; //55.0;   //5.35;
-double pid_A_Dgain      = 26; //27.0;
+double pid_A_Pgain      = 130.0; //185;    //wobbles too high?
+double pid_A_Igain      = 18.4; //60.7;   //wobbles too high?
+double pid_A_Dgain      = 53.0; //72;     //wobbles too high?
 
 double pid_A_I          = 0.0;   
 double pid_A_inputlast  = 0.0;
@@ -25,9 +25,9 @@ double pid_A_calcPID(double inputA, double target, double timedelta) {
 
 //RED QUAD ARM AND OPPOSITE MOTOR
 
-double pid_B_Pgain      = 84; ///90.0; //do not touch
-double pid_B_Igain      = 6; //55.0; //do not touch
-double pid_B_Dgain      = 26; //27.0; //do not touch
+double pid_B_Pgain      = 130.0; //185;  //wobbles too high?
+double pid_B_Igain      = 18.4; //60.7; //wobbles too high?
+double pid_B_Dgain      = 53.0; //72;   //wobbles too high?
 
 double pid_B_I          = 0.0;   
 double pid_B_inputlast  = 0.0;
@@ -47,9 +47,9 @@ double pid_B_calcPID(double inputB, double target, double timedelta) {
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-double pid_C_Pgain      = 20.0; 
-double pid_C_Igain      = 1.0;   
-double pid_C_Dgain      = 5.0;
+double pid_C_Pgain      = 146.1; //perfect
+double pid_C_Igain      = 12.9;  //perfect
+double pid_C_Dgain      = 49.7;  //perfect
 
 double pid_C_I          = 0.0;   
 double pid_C_inputlast  = 0.0;
@@ -58,7 +58,6 @@ double pid_C_calcPID(double input, double target, double timedelta) {
   double outpid;  
   
   double P = (target - input);                          // P
-  pid_C_I *= 0.99;
   pid_C_I += ((target - input)*timedelta)*pid_C_Igain;  // I
   double D = (input - pid_C_inputlast)/timedelta;       // D
   outpid = (P*pid_C_Pgain) + pid_C_I - (D*pid_C_Dgain);    
@@ -77,14 +76,10 @@ void clearPID() {
 }
 
 
-void stabilisationSetPIDgains(double inP, double inI, double inD) {
-  //clears old accumulated
-  clearPID();
-
-  //sets new gain values; 
+void stabilisationSetPIDgains(double inP, double inI, double inD) { //sets new gain values from web interface
+  clearPID(); //clears old accumulated
   
   /*
-  UNCOMMENT TO ALLOW API EDIT
   pid_A_Pgain = inP;
   pid_A_Igain = inI;
   pid_A_Dgain = inD;  
@@ -92,11 +87,12 @@ void stabilisationSetPIDgains(double inP, double inI, double inD) {
   pid_B_Pgain = inP;
   pid_B_Igain = inI;
   pid_B_Dgain = inD; 
-  */   
+  
   
   pid_C_Pgain = inP;
   pid_C_Igain = inI;
   pid_C_Dgain = inD;  
+  */
   
 }
 

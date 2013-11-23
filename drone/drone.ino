@@ -1,14 +1,9 @@
 #include "UserConfiguration.h"  // Edit this file first before uploading to the drone
-
-
 #include <Wire.h>               // Needed for I2C sensors
-
-
 
 #define STATUSLED_RED 11
 #define STATUSLED_ORANGE 12
 #define STATUSLED_GREEN 13
-
 
 //how fast we correct gyro drift. see orientationDrift()
 //based on accelerometer (feeling which way is down)
@@ -17,7 +12,7 @@
 //////////////////////////////////////
 
                               
-double accelgain = 0.025;      // higher corrects drift faster. too high with above drag value too low will 
+double accelgain = 0.0025;      // higher corrects drift faster. too high with above drag value too low will 
                               // overpower gyro and update waaay too slow
                               // higher values introduce more vibrational noise. 
                               // lower makes it less locked to world orientation
@@ -26,7 +21,7 @@ double compassgain = 0.0001;
 
 //////////////////////////////////////////
 
-int armed = 0;     // ready to fly? see takeoff in api.ino
+int armed = 0;     // ready to fly? enables PID gyro motor control. Use channel 5 to switch on/off
 int pid = 0;       
 int gyrostate;     // is gyro working
 int compassstate;  // is accel/magnetometer working
@@ -467,35 +462,28 @@ bool newOrientationUpdate() {
     
     orientationUpdate(gyro[0], gyro[1], gyro[2], deltatimeseconds);
   
-    /*
+    
     //SMOOTHING on reciever input?
-    recieverThrotttle = (recieverThrotttle * 0.95) + (((double) getRawChannelValue(3)) * 0.05);
-    recieverRoll = (recieverRoll * 0.95) + (((double) getRawChannelValue(1)-1500)*0.05);
-    recieverPitch = (recieverPitch * 0.95) + (((double) getRawChannelValue(2)-1500)*0.05);
-    recieverYaw = (recieverYaw * 0.95) + (((double) getRawChannelValue(4)-1500)*0.05);    
-    */
-
-    recieverThrotttle = (double) getRawChannelValue(3);
+    recieverThrotttle = (recieverThrotttle * 0.7) + (((double) getRawChannelValue(3)) * 0.3);
     //we minus by the raw value so they are centered. alternatively you can use your trims.
     //remember to recalibrate your ESC throttle range!
-    recieverRoll = (double) getRawChannelValue(1)-1518;
-    recieverPitch = (double) getRawChannelValue(2)-1520;
-    recieverYaw = (double) getRawChannelValue(4)-1506;    
-
+    recieverRoll = (recieverRoll * 0.7) + (((double) getRawChannelValue(1)-1500)*0.3);
+    recieverPitch = (recieverPitch * 0.7) + (((double) getRawChannelValue(2)-1500)*0.3);
+    recieverYaw = (recieverYaw * 0.7) + (((double) getRawChannelValue(4)-1500)*0.3);    
+    
     double pidoutA = 0;
     double pidoutB = 0;
     double pidoutC = 0;
 
-    //if (abs(deltatimeseconds) < 0.1) {
-      pidoutA = pid_A_calcPID(arm0[2], (PI*0.25) * (recieverPitch/500), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
-      pidoutB = pid_B_calcPID(arm1[2], (PI*0.25) * (recieverRoll/500), deltatimeseconds);   //RED     LEFT   ROLL
-      pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);                          //GREEN   UP     YAW 
+    double downvec[3] = {0.0,0.0, -1.0};
+    if (abs(deltatimeseconds) < 0.1) { //if the timer makes sense
 
-      //safety limits on PID
-      pidoutA = limitDouble(pidoutA, -100, 100);
-      pidoutB = limitDouble(pidoutB, -100, 100);
-      pidoutC = limitDouble(pidoutC, -100, 100);
-    //}
+      //this should be 90degrees when flat, or 0 error, so we do offset. PI/2 below
+      pidoutA = pid_A_calcPID(angle(arm0, downvec), PI/2 + ((PI*0.15) * (recieverPitch/500)), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
+      pidoutB = pid_B_calcPID(angle(arm1, downvec), PI/2 + ((PI*0.15) * (recieverRoll/500)), deltatimeseconds);   //RED     LEFT   ROLL
+      //TEMPDISABLE// pidoutC = pid_C_calcPID(headingdiff, (PI*0.35) * (recieverYaw/500), deltatimeseconds);      //GREEN   UP     YAW 
+
+    }
       
     
     //do proportional control. SEE stabilisation.ino and api.ino
@@ -508,7 +496,7 @@ bool newOrientationUpdate() {
         motorCommand[2] = recieverThrotttle - pidoutA + pidoutC; 
         motorCommand[3] = recieverThrotttle - pidoutB - pidoutC; 
         */
-
+        
         //QUAD X SETUP
         motorCommand[0] = recieverThrotttle - pidoutA - pidoutB + pidoutC; 
         motorCommand[1] = recieverThrotttle - pidoutA + pidoutB - pidoutC; 

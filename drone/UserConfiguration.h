@@ -66,13 +66,13 @@ Flight Configuration
 #define COMPASS_LSM303DLHC         //pololu miniIMU 
 
 // Barometric 
-#define ALTITUDE_BMP085
+//#define ALTITUDE_BMP085
 
 // Ultrasonic (downward to ground)
-#define ALTITUDE_SRF02_ULTRASONIC
+//#define ALTITUDE_SRF02_ULTRASONIC
 
 // GPS
-#define GPS_ULTIMATEGPS
+//#define GPS_ULTIMATEGPS
 
 
 // *******************************************************************************************************************************
