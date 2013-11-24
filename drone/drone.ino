@@ -1,3 +1,13 @@
+/********************************************************************** 
+  DRONE v1.1 
+  open flight controller
+
+  http://fluentart.com
+  https://github.com/fluentart/drone2
+
+**********************************************************************/
+
+
 #include "UserConfiguration.h"  // Edit this file first before uploading to the drone
 #include <Wire.h>               // Needed for I2C sensors
 
@@ -481,7 +491,7 @@ bool newOrientationUpdate() {
       //this should be 90degrees when flat, or 0 error, so we do offset. PI/2 below
       pidoutA = pid_A_calcPID(angle(arm0, downvec), PI/2 + ((PI*0.15) * (recieverPitch/500)), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
       pidoutB = pid_B_calcPID(angle(arm1, downvec), PI/2 + ((PI*0.15) * (recieverRoll/500)), deltatimeseconds);   //RED     LEFT   ROLL
-      //TEMPDISABLE// pidoutC = pid_C_calcPID(headingdiff, (PI*0.35) * (recieverYaw/500), deltatimeseconds);      //GREEN   UP     YAW 
+      pidoutC = pid_C_calcPID(headingdiff, (PI*0.35) * (recieverYaw/500), deltatimeseconds);      //GREEN   UP     YAW 
 
     }
       

@@ -12,7 +12,6 @@ double pid_A_calcPID(double inputA, double target, double timedelta) {
   double outpidA;  
   
   double P = (target - inputA);
-  pid_A_I *= 0.99;                          // P
   pid_A_I += ((target - inputA)*timedelta)*pid_A_Igain;  // I
   double D = (inputA - pid_A_inputlast)/timedelta;       // D
   outpidA = (P*pid_A_Pgain) + pid_A_I - (D*pid_A_Dgain);    
@@ -36,7 +35,6 @@ double pid_B_calcPID(double inputB, double target, double timedelta) {
   double outpidB;  
   
   double P = (target - inputB);                          // P
-  pid_B_I *= 0.99;
   pid_B_I += ((target - inputB)*timedelta)*pid_B_Igain;  // I
   double D = (inputB - pid_B_inputlast)/timedelta;       // D
   outpidB = (P*pid_B_Pgain) + pid_B_I - (D*pid_B_Dgain);
@@ -46,6 +44,8 @@ double pid_B_calcPID(double inputB, double target, double timedelta) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+// YAW PID
+
 
 double pid_C_Pgain      = 146.1; //perfect
 double pid_C_Igain      = 12.9;  //perfect
