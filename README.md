@@ -4,7 +4,11 @@ drone
 DIY Arduino DUE (ARM 32bit) quad copter drone with node.js telemetry. The arduino recieves controller signals from your hobby RC remote and mixes in gyro compensated motor commands to help steer the drone.
 Aimed to be flexible enough that anyone can jump in and use their own hardware.
 
-![!drone](http://i.imgur.com/qgPksgo.jpg)
+
+
+![!drone](http://i.imgur.com/pnxbKG5.jpg)
+
+
 
 WARNING
 =======
@@ -62,7 +66,8 @@ I'm using the MiniIMU-9 for gyro/accel/compass. You can add support for your sen
 
 ![photo!](https://raw.github.com/fluentart/drone2/master/photo.jpg)
 
-Telemetry
+
+PC Connect
 ===========
 
 droneConnect gives you a realtime 3D in the browser vector representation of what the drone sees, useful for debugging and developing further. Also included is a realtime 2D graph view showing realtime telemetry from the different axis and motor throttles. It also allows you to set the PID feedback loop calibration settings for the stabilisation of the drone.
@@ -78,3 +83,7 @@ You probably have to edit the droneConnect.js file and specify the correct COM p
 `node droneConnect.js`
 
 Open up [localhost/graph.htm](http://localhost/) and enjoy.
+
+![!drone](http://i.imgur.com/qgPksgo.jpg)
+
+drone 1 prototype
