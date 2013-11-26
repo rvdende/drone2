@@ -47,25 +47,32 @@ More detailed documentation to follow shortly including pinout diagram. Alternat
 
 A lot of source is from https://github.com/AeroQuad/AeroQuad big thanks goes out to https://github.com/kh4 for DUE reciver and motor code.
 
-Hardware
-=========
+Hardware recommendations
+========================
 
-You'll need one of these. 
+[Arduino DUE](http://arduino.cc/en/Main/ArduinoBoardDue) This will be the flight controller, sitting inbetween your reciever and your speed controllers. Available in South Africa from http://robotics.org.za/index.php?route=product/product&path=47&product_id=604
 
-![Arduino DUE!](http://robotics.org.za/image/cache/data/Arduino/duo001-500x500.jpg)
+[MinIMU-9 v2 Gyro, Accelerometer, and Compass (L3GD20 and LSM303DLHC Carrier)](http://www.pololu.com/catalog/product/1268) I'm using the MiniIMU-9 for gyro/accel/compass. You can add support for your sensor.
 
-http://arduino.cc/en/Main/ArduinoBoardDue Available in South Africa from http://robotics.org.za/index.php?route=product/product&path=47&product_id=604
+Speedcontrollers with low latency. I'm using 4x Hobbywing Skywalker 40A flashed with the blheli firmware. See [BLHELI](https://github.com/bitdump/BLHeli) and [Flashing BLHELI](http://www.olliw.eu/2012/owsilprog-tutorials/?en)
 
-I'm using the MiniIMU-9 for gyro/accel/compass. You can add support for your sensors, perhaps the calibration code can be factored out of the individual sensor "driver" code. Have a look at the existing files for reference.
+10mm or 12mm square aluminium tubing for the arms. 
 
-[MinIMU-9 v2 Gyro, Accelerometer, and Compass (L3GD20 and LSM303DLHC Carrier)](http://www.pololu.com/catalog/product/1268) Gyro stabilisation complete. Uses double floating point dual vector (forward and up vectors) and quaternion rotations on every sensor reading cycle.
+Aluminium plate for the center battery plate.
 
-[Barometric Pressure Sensor - BMP085 Breakout](https://www.sparkfun.com/products/11282) Altitude support not added yet. Barometric and sonar aimed for 2.1.0
+2x copperclad circuit board, laser printer and ferric chloride, if you want to make a power distribution board which doubles as structural support. Circuit to be posted soon.
 
-[Adafruit Ultimate GPS Logger Shield](http://www.adafruit.com/products/1272) GPS support not added yet. Aimed for 2.0.0
+Velcro straps to mount battery.
+
+Low-voltage buzzer for warning you to stop flying when LiPo battery is getting too low.
+
+3300mah 4cell LiPo battery or you can go 3cell too.
+
+4x EMAX 2815/05 motors 1500kv
+
+4x 8" props. Two right turn, two left turn. (Get more props if possible, you will break them).
 
 ![photo!](https://raw.github.com/fluentart/drone2/master/photo.jpg)
-
 
 PC Connect
 ===========
