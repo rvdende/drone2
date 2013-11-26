@@ -102,6 +102,7 @@ double recieverThrotttle = 1000.0;              //from the HUD, this should cont
 double recieverPitch = 0;
 double recieverRoll = 0;
 double recieverYaw = 0;
+double recieverPIDratio = 1;
 
 double hardlimit = 1060.0;                //absolute max motor speed. this even overrides stability control.
 
@@ -481,17 +482,28 @@ bool newOrientationUpdate() {
     recieverPitch = (recieverPitch * 0.7) + (((double) getRawChannelValue(2)-1500)*0.3);
     recieverYaw = (recieverYaw * 0.7) + (((double) getRawChannelValue(4)-1500)*0.3);    
     
+
+    recieverPIDratio = (double) getRawChannelValue(6); //TURN KNOB
+    recieverPIDratio = ((recieverPIDratio - 1500)/500)+1;
+
+    if (recieverPIDratio < 0) { recieverPIDratio = 0; }
+    if (recieverPIDratio > 2) { recieverPIDratio = 2; }
+    
+
     double pidoutA = 0;
     double pidoutB = 0;
     double pidoutC = 0;
 
     double downvec[3] = {0.0,0.0, -1.0};
     if (abs(deltatimeseconds) < 0.1) { //if the timer makes sense
-
       //this should be 90degrees when flat, or 0 error, so we do offset. PI/2 below
-      pidoutA = pid_A_calcPID(angle(arm0, downvec), PI/2 + ((PI*0.15) * (recieverPitch/500)), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
-      pidoutB = pid_B_calcPID(angle(arm1, downvec), PI/2 + ((PI*0.15) * (recieverRoll/500)), deltatimeseconds);   //RED     LEFT   ROLL
+      pidoutA = pid_A_calcPID(angle(arm0, downvec), PI/2 + ((PI*0.25) * (recieverPitch/500)), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
+      pidoutB = pid_B_calcPID(angle(arm1, downvec), PI/2 + ((PI*0.25) * (recieverRoll/500)), deltatimeseconds);   //RED     LEFT   ROLL
       pidoutC = pid_C_calcPID(headingdiff, (PI*0.35) * (recieverYaw/500), deltatimeseconds);      //GREEN   UP     YAW 
+
+      pidoutA = pidoutA * recieverPIDratio;
+      pidoutB = pidoutB * recieverPIDratio;
+      pidoutC = pidoutC * recieverPIDratio;
 
     }
       
