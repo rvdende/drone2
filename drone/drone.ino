@@ -483,6 +483,8 @@ bool newOrientationUpdate() {
     recieverYaw = (recieverYaw * 0.7) + (((double) getRawChannelValue(4)-1500)*0.3);    
     
 
+    
+
     recieverPIDratio = (double) getRawChannelValue(6); //TURN KNOB
     recieverPIDratio = ((recieverPIDratio - 1500)/500)+1;
 
@@ -499,11 +501,12 @@ bool newOrientationUpdate() {
       //this should be 90degrees when flat, or 0 error, so we do offset. PI/2 below
       pidoutA = pid_A_calcPID(angle(arm0, downvec), PI/2 + ((PI*0.25) * (recieverPitch/500)), deltatimeseconds);  //WHITE   FRONT  PITCH/ELEV
       pidoutB = pid_B_calcPID(angle(arm1, downvec), PI/2 + ((PI*0.25) * (recieverRoll/500)), deltatimeseconds);   //RED     LEFT   ROLL
-      pidoutC = pid_C_calcPID(headingdiff, (PI*0.35) * (recieverYaw/500), deltatimeseconds);      //GREEN   UP     YAW 
+      pidoutC = pid_C_calcPID(headingdiff, 0.0, deltatimeseconds);      //GREEN   UP     YAW 
 
       pidoutA = pidoutA * recieverPIDratio;
       pidoutB = pidoutB * recieverPIDratio;
       pidoutC = pidoutC * recieverPIDratio;
+
 
     }
       
@@ -511,6 +514,7 @@ bool newOrientationUpdate() {
     //do proportional control. SEE stabilisation.ino and api.ino
     if (armed == 1) {           
         digitalWrite(STATUSLED_RED, HIGH);
+        rotate(wantedheading, zaxis, recieverYaw*deltatimeseconds/-360.0);
         /*
         //QUAD + SETUP
         motorCommand[0] = recieverThrotttle + pidoutA + pidoutC; 
@@ -520,6 +524,8 @@ bool newOrientationUpdate() {
         */
         
         //QUAD X SETUP
+        if (pidoutC > 100.0) { pidoutC = 100.0;}
+        if (pidoutC < -100.0) { pidoutC = -100.0;}
         motorCommand[0] = recieverThrotttle - pidoutA - pidoutB + pidoutC; 
         motorCommand[1] = recieverThrotttle - pidoutA + pidoutB - pidoutC; 
         motorCommand[2] = recieverThrotttle + pidoutA + pidoutB + pidoutC; 
