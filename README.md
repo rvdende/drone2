@@ -4,6 +4,21 @@ drone
 DIY Arduino DUE (ARM 32bit) quad copter drone with node.js telemetry. The arduino recieves controller signals from your hobby RC remote and mixes in gyro compensated motor commands to help steer the drone.
 Aimed to be flexible enough that anyone can jump in and use their own hardware.
 
+Start to end how to
+===================
+
+First we'll make the quadcopter arms. Cut square aluminium tube into 4 equal length pieces. Drill holes as shown below.
+
+[ARM SCHEMATIC]
+
+You'll want to spraypaint them so its more visible while flying.
+
+Cut two plates and drill holes for mounting the 4 aluminium arms.
+
+You need to buy your motors and speed controllers. Its best to get motors that are lower rpm and higher torque, because the airspeed will most of the time be close to hover. Instead of flying at speed like a normal aircraft. 
+
+
+
 
 
 ![!drone](http://i.imgur.com/pnxbKG5.jpg)
